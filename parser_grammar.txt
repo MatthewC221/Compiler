@@ -1,0 +1,82 @@
+class Program {
+make class it's own type, program = name
+C N {
+
+void main() {
+void/int/char/char */etc for function return, main can be it's own
+T(type) M () { 
+
+int i
+T (type) N(identifier) ;(semi-colon)
+T N [ 5(int) ]; array (number required)
+should reduce to
+T N ARR;
+
+int i = 0; illegal
+
+int a[2+3];
+T N ILLEGAL_ARR;
+
+int callout;
+T N SPEC ; (special identifier) ILLEGAL
+
+b = 2 + 7 = 12;
+I (ident.) = 2 + 7
+I (ident.) = int
+I (ident.) = int = 
+ILLEGAL
+
+Int b;
+I (ident.) I (ident.) ILLEGAL
+
+BRACES NEED TO BE COUNTED
+
+int;
+T ; ILLEGAL
+
+int a b;
+T I (ident.) B(break) I(ident.);
+
+main() {
+M(main) = ILLEGAL
+
+int main(a) {
+T M ( N(ident.) identifier before type )
+
+foo(int) //within func
+N (ident.) ( int(check flag for within func) )
+
+if () {
+C (cond.) (E == 0) --> reduce to C (S(statement)), more statements reduce to S
+C () { ILLEGAL
+
+0xcafe();
+N () ILLEGAL 
+
+C N {       //class initialiser
+T M () {    //main
+T N;        //identifier initialisation
+T N ARR;
+N EQ ARITHMETIC     //only one equal possible: 5 + 5, Operands (+, *, /, -, <, >, !=, ==)
+N EQ N O N --> N EQ ARI
+N EQ ARI O N --> N EQ ARI
+Co ( S ) {  //conditional statement, can be Co (S (AND/OR) S (AND/OR) S) --> Co (S)
+FI (T N, T N) --> FI (P) //function ident. + param; or FI ();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,41 @@
+Decaf compiler (MIT OCW 6.035)
+
+The compiler has my own elements (both intentionally and unintentionally) to it because it is self-studied. 
+
+Explanation of components
+
+Scanner - syntax scanner that divides the text file into symbols, strings, integers and operands
+
+Example:
+
+int main () {
+    printf("Hello World\n");
+    
+    return 0;
+}
+
+Will become 
+
+int
+main
+(
+)
+{
+printf
+(
+"Hello World\n"
+)
+;
+
+etc.
+
+Parser - mostly non contextual, analyses everything the scanner gives it and decides if everything makes sense within the context of that line. Using a stack and shifting + reducing (shift-reduce parser)
+
+int a = 5; //illegal, unexpected '=' (decaf syntax only allows init)
+a = 5 + 5 , ;   //unexpected ','
+if (b = 17) {   //expected '=='
+
+Semantic analyser - analyses the context of everything, void return in an integer function, string comparison with integer, variable exists, out of bounds array reference, etc...
+
+Code generator - in the works...
+
