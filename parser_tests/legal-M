@@ -1,0 +1,40 @@
+class Program {
+}
+
+class A {
+}
+
+class hello {
+}
+
+class Prog {
+}
+
+class crab {
+}
+
+int new;
+int temp;
+
+boolean hi;
+
+boolean ProgA() {
+}
+
+void PROGRAM() {
+}
+
+
+int ab;
+
+int cab;
+cab = 2 * 2 + 5 + 5;
+int a, ab, c;
+ab = 5;
+
+int a[5];
+int b[123];
+int c[12];
+
+int d[ab];
+void new_arr[cab];

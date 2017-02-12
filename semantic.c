@@ -87,19 +87,22 @@ Functions
 
 */
 
+#include "header.h"
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "header.h"
+#include <unistd.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 unsigned int list_size = 0;     //will need many of this
 
 // Different linked lists for classes, local identifiers, global identifiers, functions - functions need parameter areas
 
 //DONE: function decl, class set, main func, variable initialised, array intialised
-//DOING: functions, multi var intialise, var set, array ref set     
+//DONE: variable value set = 123 arr size means var/vars that will be computed later...
+//DOING: functions, multi var intialise, array ref set     
 
 
 unsigned int size_list = 0;
@@ -172,10 +175,27 @@ void insert_type(char *string1) {
                 temp_type = boolean_type;
                 break;
         }   
-        variable_handler(string1, temp_type);
+        if (temp_type == void_type) {
+            printf("can't be void\n");
+        } else {
+            variable_handler(string1, temp_type);
+        }
         
     } else if (string1[0] == '9') {
-        //printf("Inserting class...\n");
+     
+        int i = 3;
+        for (i = 3; i < strlen(string1); i++) {
+            if (string1[i] == ' ') {
+                break;
+            }
+        }
+        
+        char *temp_string = makeString(3, i-1, string1);       
+        int temp_val = check_variable_exists(temp_string, 1); 
+        free(temp_string);           
+        
+        if (temp_val == 0) return;
+        
     } else if (string1[0] == 'A') {
         //printf("Inserting class...\n");
     } else if (string1[0] == 'B') {
@@ -224,9 +244,9 @@ void insert_type(char *string1) {
 void array_handler(char *string1, unsigned int type) {
 
     int end = 0;
-    int spaces = 0;
     int int_start = 0;
     int int_end = 0;
+    int type_search = 0;
     
     int i;
     for (i = 5; i < strlen(string1); i++) {
@@ -239,36 +259,57 @@ void array_handler(char *string1, unsigned int type) {
         }
     }       
     
-    char *new_string = makeString(5, end, string1); 
+    char *new_string = makeString(5, end, string1);       
+    char *temp_str = makeString(int_start + 1, int_end, string1);
+            
     
-    int scale = 1;
-    int literal_size = 0;
-        
-    for (i = int_end; i > int_start; i--) {
-        if (!isdigit(string1[i])) {
-            printf("\n\e[34mprog\e[0m:%d array initialisation error: invalid array size, element: '\e[31m%c\e[0m'\nnote: valid array size is of 'positive integers'\n\n", current_line, string1[i]);
-            return;
-        }
-        literal_size = scale * (string1[i] - '0') + literal_size;
-        scale = scale * 10;
+    if (check_INT(temp_str) == 1) {
+        type_search = 1;
+    } else if (check_IDE(temp_str) == 1) {
+        type_search = 2;
+    } else {
+        printf("\n\e[34mprog\e[0m:%d array initialisation error: invalid array size, element: '\e[31m'-', '+', '/', '*'\e[0m'\nnote: valid array size is of 'positive integers'\n\n", current_line);
+        return;
     }
         
+
+    int size = 0;
+    int scale = 1;
+
+    if (type_search == 2) {
+        int value = check_variable_exists(temp_str, 0);
+        if (value == 2) {
+            printf("\n\e[34mprog\e[0m:%d array initialisation error: invalid array size, element defined but uninitialised: '\e[31m%s\e[0m'\nnote: valid array size is of 'positive integers'\n\n", current_line, temp_str);  
+            return;
+        } else if (value == 0) {
+            printf("\n\e[34mprog\e[0m:%d array initialisation error: invalid array size, element undefined: '\e[31m%s\e[0m'\nnote: valid array size is of 'positive integers'\n\n", current_line, temp_str); 
+            return; 
+        } else {
+            size = value;
+        }
+    } else {
+        for (int counter = strlen(temp_str) - 1; counter >= 0; counter--) {
+            size = scale * (temp_str[counter] - '0') + size;
+            scale = scale * 10;
+        }
+    }
+                                     
+
+
     if (check_class(new_string)) {
-        //printf("Context class/function/variable/array initialisation error: \e[31m%s\e[0m already exists as a class\n", string1);
     
     } else if (check_func(new_string)) {
-        //printf("Context class/function/variable/array initialisation error: \e[31m%s\e[0m already exists as a function\n", string1);
       
     } else if (check_variable(new_string)) {
-        //printf("Context class/function/variable/array initialisation error: \e[31m%s\e[0m already exists as a 
     
     } else if (check_array(new_string)) {
     
     } else {
-        insertNode_array(new_string, type, literal_size);
+        insertNode_array(new_string, type, size);
     }
     
     free(new_string);
+    free(temp_str);
     
 }
 
@@ -358,22 +399,15 @@ void class_handler(char *string1) {
 
 
 unsigned int check_array(char *string1) {
-    
-    if (head_array != NULL) { 
-        if (strcmp(head_array->name, string1) == 0) {
-            printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, head_array->line_number);  
+                           
+    Node_array *temp = head_array;
+                
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0) {
+            printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, temp->line_number);  
             return 1;
         }
-                          
-        Node_array *temp = head_array;
-                
-        while (temp->next != NULL) {
-            if (strcmp(temp->name, string1) == 0) {
-                printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, head_array->line_number);  
-                return 1;
-            }
-            temp = temp->next;
-        }
+        temp = temp->next;
     }
 
     return 0;
@@ -381,21 +415,14 @@ unsigned int check_array(char *string1) {
 
 unsigned int check_class(char *string1) {
     
-    if (head_class != NULL) { 
-        if (strcmp(head_class->name, string1) == 0) {
-            printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, head_class->line_number);  
+    Node_class *temp = head_class;
+            
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0) {
+            printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, temp->line_number);  
             return 1;
         }
-                          
-        Node_class *temp = head_class;
-                
-        while (temp->next != NULL) {
-            if (strcmp(temp->name, string1) == 0) {
-                printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, head_class->line_number);  
-                return 1;
-            }
-            temp = temp->next;
-        }
+        temp = temp->next;
     }
 
     return 0;
@@ -403,47 +430,59 @@ unsigned int check_class(char *string1) {
 
 unsigned int check_func(char *string1) {
 
-    if (head_function != NULL) { 
-        if (strcmp(head_function->name, string1) == 0) {
-            printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, head_function->line_number);  
+
+                          
+    Node_function *temp = head_function;
+            
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0) {
+            printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, temp->line_number);  
             return 1;
         }
-                          
-        Node_function *temp = head_function;
-                
-        while (temp->next != NULL) {
-            if (strcmp(temp->name, string1) == 0) {
-                printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, head_function->line_number);  
-                return 1;
-            }
-            temp = temp->next;
-        }
+        temp = temp->next;
     }
 
     return 0;
 }
 
-unsigned int check_variable(char *string1) {
+unsigned int check_variable(char *string1) {    //checks if it exists, if does throw err
 
-    if (head_variable != NULL) { 
-        if (strcmp(head_variable->name, string1) == 0) {
-            printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, head_variable->line_number);  
+    Node_variable *temp = head_variable;
+                
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0) {
+            printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, temp->line_number);  
             return 1;
         }
-                          
-        Node_variable *temp = head_variable;
-                
-        while (temp->next != NULL) {
-            if (strcmp(temp->name, string1) == 0) {
-                printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, head_variable->line_number);  
-                return 1;
-            }
-            temp = temp->next;
-        }
+        temp = temp->next;
     }
 
     return 0;
 }
+
+unsigned int check_variable_exists(char *string1, int make_true) {     
+
+    //return 0 if non-existent, 2 if defined but no value, value of var is exists and defined
+                          
+    Node_variable *temp = head_variable;
+            
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0) {
+            if (temp->value_set == false) {
+                if (make_true == 1) temp->value_set = true;
+                
+                return 2;
+            } else {
+                return 123;      //for later computation
+            }
+        }
+        temp = temp->next;
+    }
+
+    return 0;
+}
+
+
 
 
 Node_array *makeNode_array(char *string1, unsigned int type_var, unsigned int size) {
@@ -475,7 +514,8 @@ Node_variable *makeNode_var(char *string1, unsigned int type_var) {
     strcpy(newNode->name, string1);
     newNode->line_number = current_line;
     newNode->type = type_var;
-    newNode->value_set = 0;
+    newNode->value_set = false;
+    newNode->value = 0;
     return newNode;
 }
 
@@ -637,9 +677,42 @@ L=LOOP STATEMENT
 M=END FUNCTION
 */
 
+unsigned int check_INT(char *input) {      //return 1 if +ve integer, 2 if -ve integer
+
+    int return_value = 1;
+    
+    if (!isdigit(input[0]) && input[0] != '-') {
+        return 0;        
+    } else {
+        for (int i = 1; i < strlen(input); i++) {
+            if (!isdigit(input[i])) {
+                return 0;
+            }
+        }                          
+    }        
+    
+    if (input[0] == '-') return_value = 2;
+    return return_value;
 
 
+}
 
+unsigned int check_IDE(char *input) {      //return 1 if identifier
+
+    int return_value = 1;
+    
+    if (!isalpha(input[0]) && input[0] != '_') {
+        return 0;
+    } else {
+        for (int i = 1; i < strlen(input); i++) {
+            if (!isdigit(input[i]) && !isalpha(input[i]) && input[i] != '_') {
+                return 0;
+            }
+        }                          
+    }
+
+    return return_value;
+}
 
 
 

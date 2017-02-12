@@ -3,6 +3,8 @@
 
 //ALL SCANNER FUNCTIONS
 
+#include <stdbool.h>
+
 int line_number;
 
 char *makeString(int start, int end, char *string);	//makes the string to check
@@ -12,11 +14,11 @@ int checkNewLine(char *input); 						//check if there is a trailing new line
 
 int specialChar(char behind, char infront);
 void checkTokens(char *input);
-int checkIntegers(char *input);
+extern int checkIntegers(char *input);
 int checkHex(char *input); 							//checking for hexadecimals
 int checkBracket(char test);						//checking for brackets/braces (){}
 int checkCharLiteral(char *string);						//checks for charliteral
-int checkIdentifier(char *string);
+extern int checkIdentifier(char *string);
 void pushRange(int start, int end, char *string);
 void checkString(char *temp_string);
 //FINISHED SCANNER
@@ -71,7 +73,8 @@ typedef struct node_var {       //both global and non-global
     char *name;
     struct node_var *next;
     unsigned int line_number;
-    unsigned int value_set;
+    bool value_set;
+    int value;
     unsigned int type;
 } Node_variable;
 
@@ -135,6 +138,11 @@ unsigned int check_variable(char *string1);
 unsigned int check_class(char *string1);
 unsigned int check_func(char *string1);
 unsigned int check_array(char *string1);
+
+unsigned int check_IDE(char *input);
+unsigned int check_INT(char *string);
+
+unsigned int check_variable_exists(char *string, int make_true);
 
 
 

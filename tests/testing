@@ -1,0 +1,32 @@
+class Program {
+}
+
+class A {
+}
+
+class hello {
+}
+
+class Prog {
+}
+
+class crab {
+}
+
+int new;
+int temp;
+
+boolean hi;
+
+boolean ProgA() {
+}
+
+void PROGRAM() {
+}
+
+int a[5];
+int b[123];
+int c[12];
+
+int c[1-23];
+int d[ab];
