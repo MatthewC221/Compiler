@@ -534,7 +534,7 @@ void pushRange(int start, int end, char *string) {  //parser func
 			    push("IDENTIFIER", new_string);
 			    break;
 		    case 4:
-		        push("BOOLEANLITERAL", "");
+		        push("BOOLEANLITERAL", "T_F");
 	            break;
             case 5:
                 push("STRINGLITERAL", new_string);       //string literal done seperately, it's okay

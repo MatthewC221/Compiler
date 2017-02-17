@@ -209,11 +209,14 @@ void push(char* string1, char *string2) {
             pure_push_names("[");
             pure_push(string1); 
         } else if (if_operand(string1)) {
-            pure_push_names(string2);         
+            //pure_push_names(string2);         
             pure_push(string1);
         } else if (strcmp(string1, "SPECIAL") == 0 && strcmp(string2, "callout") == 0) {
             //pure_push_names(string2);
             pure_push(string2);
+        } else if (strcmp(string1, "BOOLEANLITERAL") == 0 && strcmp(string2, "T_F") == 0) {
+            pure_push_names(string2);
+            pure_push(string1); 
         } else if (strcmp(string1, "STRINGLITERAL") == 0 && strcmp(string2, "\"printf\"") == 0) {
             pure_push_names("_printf_");
             pure_push("C_LIB");
@@ -564,7 +567,7 @@ void identifier_reduce(char *string) {
     } else if (if_operand(former_string) && strcmp(former_string1, "ARGUMENTS_DOUBLE") == 0) {
         pure_push("ARGUMENTS_DOUBLE");              //for i = 0, a * a {
         
-    } else if (strcmp(former_string, ",") == 0 && (if_integer(former_string1) || strcmp(former_string1, "ARGUMENTS") == 0) || strcmp(former_string1, "ARGUMENTS_DOUBLE") == 0) {    //a, b, c, d
+    } else if (strcmp(former_string, ",") == 0 && (if_integer(former_string1) || strcmp(former_string1, "ARGUMENTS") == 0 || strcmp(former_string1, "ARGUMENTS_DOUBLE") == 0)) {    //a, b, c, d
         pure_push("ARGUMENTS");
         
         
@@ -600,7 +603,7 @@ unsigned int check_loop() {
         pure_push(temp1);
     }
     
-    if (semantic != "") {
+    if (strcmp(semantic, "") != 0) {
         free(semantic);
     }
     
@@ -732,7 +735,7 @@ void check_function() {        //for functions, classes and conditionals
     bracket_stack.top = 0;
     s.top = 0;
     semantic_info.top = 0;
-    if (semantic != "") {
+    if (strcmp(semantic, "") != 0) {
         free(semantic);
     }
 
@@ -895,7 +898,7 @@ void check_statement() {
     order_count = 0;
     semantic_info.top = 0;
     
-    if (semantic != "") {
+    if (strcmp(semantic, "") != 0) {
         free(semantic);
     }
     

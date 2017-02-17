@@ -99,8 +99,19 @@ typedef struct node_function {
     struct node_function *next;
     unsigned int line_number;
     unsigned int type;
+    unsigned int has_parameters;            //indicates if there are arguments to pass
+    unsigned int *parameter_types;          //creates array of the types of parameters
 } Node_function;
 
+typedef struct node_local_var {
+    char *name;
+    struct node_local_var *next;
+    unsigned int line_number;
+    bool value_set;
+    int value;
+    unsigned int type;
+    unsigned int location;
+} Node_local_variable;
 
 
 //semantic addons
@@ -115,12 +126,14 @@ void insert_type(char *string1);
 
 void insertNode_class(char *string1);
 void insertNode_var(char *string1, unsigned int type);
-void insertNode_func(char *string1, unsigned int type);
+void insertNode_func(char *string1, unsigned int type, int if_parameter);
 void insertNode_array(char *string1, unsigned int type_var, unsigned int size);
+void insertNode_local_var(char *string1, unsigned int type);
 
 Node_variable *makeNode_var(char *string1, unsigned int type);
+Node_local_variable *makeNode_local_var(char *string1, unsigned int type_var);
 Node_class *makeNode_class(char *string1);
-Node_function *makeNode_function(char *string1, unsigned int type);
+Node_function *makeNode_function(char *string1, unsigned int type, int if_parameter);
 Node_array *makeNode_array(char *string1, unsigned int type, unsigned int size);
 
 void printList_all();
@@ -129,20 +142,34 @@ void printList_all();
 
 void semantic_handler();        //main handler function that reads from stack
 
-void class_handler(char *string1);
-void function_handler(char *string1, unsigned int temp_type);
-void variable_handler(char *string1, unsigned int temp_type);
-void array_handler(char *string1, unsigned int type);
+void class_handler(char *string1);      //handles class
+void function_handler(char *string1);       //handles func w/o param
+void variable_handler(char *string1);       //handles variable init
+void array_handler(char *string1);               //handles array init
 
-unsigned int check_variable(char *string1);
+void variable_set_handler(char *string1);                           //handles variable set
+void array_set_handler(char *string1);   
+void function_param_handler(char *string1);                           //handles array set
+
+unsigned int check_variable(char *string1);                         //checks if variable/class/func/array exists
 unsigned int check_class(char *string1);
 unsigned int check_func(char *string1);
 unsigned int check_array(char *string1);
+unsigned int check_local_variable(char *string1);
 
-unsigned int check_IDE(char *input);
+unsigned int check_IDE(char *input);                                //checks if string is integer/IDE
 unsigned int check_INT(char *string);
+unsigned int find_type_var(char *string1);                          //finds the type of the var
+unsigned int find_type_local_var(char *string1);
 
-unsigned int check_variable_exists(char *string, int make_true);
+unsigned int check_variable_exists(char *string, int make_true);    //checks if var exists, if does set it to init.
+unsigned int check_array_exists(char *string1);
+unsigned int check_local_variable_exists(char *string1, int make_true);     //checks if var exists in the local scope
+
+unsigned int if_operand_lit(char a);                                //checks if char is operand
+unsigned int valid_variable(char *string1);
+unsigned int check_location(char *string1);
+
 
 
 
