@@ -15,14 +15,19 @@ unsigned int main_count = 0;                    //requires only one main
 // Different linked lists for classes, local identifiers, global identifiers, functions - functions need parameter areas
 
 //DONE: refer to semantic_codes.txt
-//DOING: array ref set, function decl w/param, return int, return IDE     
+//DOING: function call w/arg, multi var init.     
 
+
+//URGENT: Design flaw, should return nodes with all info...to compare
 
 //THINGS TO CONSIDER: should we put invalid things into the linked list, e.g. if a = ab and ab is uninit. 
 //does it matter if it goes into linked list???
 
 unsigned int size_list = 0;
 unsigned int expecting_return = -1;
+unsigned int return_count = 0;              //number of returns in a function
+
+unsigned int within_loop = 0;
 
 #define integer_type 0
 #define void_type 1
@@ -38,9 +43,10 @@ unsigned int current_line;
 
 void semantic_handler() {
 
+
     int i;
     for (i = 0; i <= complete.top - 1; i++) {
-        printf ("\e[1m%-40s\e[0m line num: %d\n", complete.stk[i], semantic_line[i]);
+        printf ("\e[1m%-55s\e[0m line num: %d\n", complete.stk[i], semantic_line[i]);
         current_line = semantic_line[i];
         insert_type(complete.stk[i]);
     }  
@@ -50,9 +56,13 @@ void semantic_handler() {
     }
        
     printList_all();
+    free_all();
+    
+
+    
 }
 
-void insert_type(char *string1) {
+void insert_type(char *string1) {   //REPLACE WITH SWITCH LATER
 
     if (string1[0] == '1') {        //class        
         class_handler(string1);
@@ -74,11 +84,15 @@ void insert_type(char *string1) {
        
         //printf("Inserting function decl w/param...\n");
     } else if (string1[0] == '5') {
-        //printf("Inserting class...\n");
+        
+        conditional_handler(string1);
+        
     } else if (string1[0] == '6') {
         //printf("Inserting class...\n");
     } else if (string1[0] == '7') {
-        //printf("Inserting class...\n");
+        
+        special_conditional_handler(string1);
+        
     } else if (string1[0] == '8') {         //variable initil.
     
         variable_handler(string1);
@@ -103,7 +117,9 @@ void insert_type(char *string1) {
         if (if_in_function != 0) {
             printf("\n\e[34mprog\e[0m:%d invalid return value: \e[31mexpecting other\e[0m\nnote: returning integer value in non-int function\n\n", current_line);                       
         } 
-        expecting_return = -1;
+        
+        return_count++;
+        
     } else if (string1[0] == 'F') {             //return identifier
         int i;
         for (i = 3; i < strlen(string1); i++) {
@@ -112,7 +128,7 @@ void insert_type(char *string1) {
             }
         }
         
-        char *temp_string = makeString(3, i-1, string1);
+        char *temp_string = makeString(3, i, string1);
         int temp = find_type_var(temp_string);
         int temp1 = find_type_local_var(temp_string);
         
@@ -133,37 +149,239 @@ void insert_type(char *string1) {
             } else if (!check_location(temp_string)) {           //checks if the identifier is in local scope
                 printf("\n\e[34mprog\e[0m:%d invalid return value: \e[31mout of scope variable\e[0m\nnote: returning invalid type\n\n", current_line);
             }
-        }     
-        expecting_return = -1;   
+        } 
+        
+        return_count++;   
+        free(temp_string);  
                 
-    } else if (string1[0] == 'G') {
-        //printf("Inserting class...\n");
-    } else if (string1[0] == 'H') {
-        //printf("Inserting class...\n");
+    } else if (string1[0] == 'G' || string1[0] == 'H') {
+      
+        int i = 3;
+        for (; i < strlen(string1); i++) {
+            if (string1[i] == ' ') {
+                break;
+            }
+        }
+        
+        char *temp_string = makeString(3, i, string1);
+        int temp_type = find_type_func(temp_string);
+        
+        if (temp_type != expecting_return || function_identity == -1) {
+            printf("\n\e[34mprog\e[0m:%d invalid return value: \e[31mexpecting other type\e[0m\nnote: returning invalid type\n\n", current_line);
+        }                
+      
+      
+        if (string1[0] == 'H') {
+            function_call_handler(string1, 1, 0);
+        } else {
+            function_call_handler(string1, 0, 0);
+        }
+        
+        return_count++;
+        free(temp_string);
+        
     } else if (string1[0] == 'I') {         //return void
         if (if_in_function != 1) {
             printf("\n\e[34mprog\e[0m:%d invalid return value: \e[31mexpecting other type, given void\e[0m\nnote: returning invalid type\n\n", current_line);
-        } 
-        expecting_return = -1;
-    } else if (string1[0] == 'J') {
-        //printf("Inserting class...\n");
+        }         
+        
+    } else if (string1[0] == 'J') {         //function call w/o PARAM
+        
+        function_call_handler(string1, 0, 1);
+        
     } else if (string1[0] == 'K') {
-        //printf("Inserting class...\n");
+    
+        function_call_handler(string1, 1, 1);
+        
     } else if (string1[0] == 'L') {
-        //printf("Inserting class...\n");
+    
+        within_loop++;
+    
+    } else if (string1[0] == 'M') {
+    
+        multi_var_handler(string1);
+        
+    } else if (string1[0] == 'O') {
+    
+        if (within_loop == 0) {
+            printf("\n\e[34mprog\e[0m:%d invalid special: \e[31m'break'\e[0m\nnote: break must be within loop\n\n", current_line);  
+        }
+              
+    } else if (string1[0] == 'P') {
+
+        if (within_loop == 0) {
+            printf("\n\e[34mprog\e[0m:%d invalid special: \e[31m'continue'\e[0m\nnote: break must be within loop\n\n", current_line);  
+        }
+        
+    } else if (string1[0] == 'Q') {
+        
+        within_loop = 0;
+
     } else if (string1[0] == 'X') {
-        if (expecting_return == integer_type) {
+        if (expecting_return == integer_type && return_count == 0) {
             printf("\n\e[34mprog\e[0m:%d missing return value: \e[31mexpecting int type, given other\e[0m\nnote: returning none\n\n", current_line);
-        } else if (expecting_return == boolean_type) {
+        } else if (expecting_return == boolean_type && return_count == 0) {
             printf("\n\e[34mprog\e[0m:%d missing return value: \e[31mexpecting boolean type, given other\e[0m\nnote: returning none\n\n", current_line);
         }
         
+        return_count = 0;
         if_in_function = -1;
         function_identity = function_identity + 100;
-        expecting_return = -1;
+        
     
     }
 }
+
+void special_conditional_handler(char *string1) {
+
+    int i = 5;
+    int start = i;
+    int array_flag = 0;
+    int function_flag = 0;
+    int count_spaces = 0;
+    
+    for (; i < strlen(string1); i++) {
+        if (string1[i] == ' ') {
+            if (string1[i + 1] == '[') {
+                array_flag = 1;
+            } else if (string1[i + 1] == '(') {
+                function_flag = 1;
+                for (; i < strlen(string1); i++) {
+                    if (string1[i] == ')') {
+                        i++;
+                        break;
+                    } else if (string1[i] == ' ') {
+                        count_spaces++;
+                    }
+                }
+            }
+            break;
+        }
+    }
+
+    char *temp_string = makeString(start, i-1, string1);
+    
+    if (function_flag) {
+        char *empty = "   ";
+        char *new_string = malloc(strlen(temp_string) + 4);
+        strcpy(new_string, empty);
+        strcat(new_string, temp_string);
+        if (count_spaces > 2) {
+            function_call_handler(new_string, 1, 0);
+        } else {
+            function_call_handler(new_string, 0, 0);
+        }       
+    } else if (array_flag) {
+        Node_array *temp_array = get_array_node(temp_string);
+        if (temp_array == NULL || temp_array->location != function_identity) {
+            printf("\n\e[34mprog\e[0m:%d array reference undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string); 
+        }   
+        free(temp_array);         
+    } else if (check_IDE(temp_string)) {
+        if (find_type_local_var(temp_string) == -1 && find_type_var(temp_string) == -1) {
+            printf("\n\e[34mprog\e[0m:%d variable undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string);        
+        }
+    }
+
+
+
+}
+
+void conditional_handler(char *string1) {
+
+    int array_flag = 0;
+    int i = 5;
+    int start = i;
+    for (; i < strlen(string1); i++) {
+        if (string1[i] == ' ') {
+            if (string1[i + 1] == '[') {
+                array_flag = 1;
+            }
+            break;
+        }
+    }
+
+    char *temp_string = makeString(start, i-1, string1);
+    
+    int first_type = -1;
+    
+    if (array_flag) {
+        array_flag = 0;
+        Node_array *temp_array = get_array_node(temp_string);
+        if (temp_array == NULL || temp_array->location != function_identity) {
+            printf("\n\e[34mprog\e[0m:%d array reference undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string);         
+        
+        } else {
+            first_type = temp_array->type;
+        } 
+    } else if (check_IDE(temp_string)) {
+        int global_type = find_type_var(temp_string);
+        int local_type = find_type_local_var(temp_string);
+        
+        if (global_type != -1) {
+            first_type = global_type;
+        } else if (local_type != -1) {
+            first_type = local_type;
+        } else {
+            printf("\n\e[34mprog\e[0m:%d variable undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string);  
+    
+        }
+    } else {
+        first_type = 0;
+    }    
+    
+    int start_count = 0;
+    
+    for (; i < strlen(string1); i++) {
+        if ((string1[i] == '>' || string1[i] == '<' || string1[i] == '=') && string1[i + 1] == ' ') {
+            start_count = 1;
+            i++;
+            start = i + 1;
+        } else if (string1[i] == ' ' && start_count == 1) {
+            if (string1[i + 1] == '[') {
+                array_flag = 1;
+            }
+            break;
+        }
+    } 
+
+    char *temp_string1 = makeString(start, i-1, string1);
+
+    int second_type = -1;
+
+    if (array_flag) {
+        array_flag = 0;
+        Node_array *temp_array = get_array_node(temp_string1);
+        if (temp_array == NULL || temp_array->location != function_identity) {
+            printf("\n\e[34mprog\e[0m:%d array reference undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string1);         
+        
+        } else {
+            second_type = temp_array->type;
+        } 
+    } else if (check_IDE(temp_string1)) {
+        int global_type = find_type_var(temp_string1);
+        int local_type = find_type_local_var(temp_string1);
+        
+        if (global_type != -1) {
+            second_type = global_type;
+        } else if (local_type != -1) {
+            second_type = local_type;
+        } else {
+            printf("\n\e[34mprog\e[0m:%d variable undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string1);  
+    
+        }
+    } else {
+        second_type = 0;
+    }
+
+    if (second_type != first_type) {
+        printf("\n\e[34mprog\e[0m:%d incompatible comparison: '\e[31m%s, %s\e[0m'\nnote: conditional doesn't return boolean\n\n", current_line, temp_string, temp_string1);
+    }    
+
+
+
+}
+
 
 unsigned int check_location(char *string1) {
 
@@ -201,20 +419,171 @@ void array_set_handler(char *string1) {     //doesn't check out of bounds, just 
     if (check_array_exists(temp_string) == 0) {
         printf("\n\e[34mprog\e[0m:%d array undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string);
     } else {
+    
+        Node_array *array_temp = get_array_node(temp_string);
+        int arr_type = array_temp->type;
+        
         int start = i;
+        int array_flag = 0;
+        
         for (i = start; i < strlen(string1); i++) {
             if (string1[i] == ' ' || i == strlen(string1) - 1) {
                 char *temp_string1 = makeString(start, i, string1);
-                if (check_IDE(temp_string1) && valid_variable(temp_string1)) {
+                
+                if (string1[i + 1] == '[') {
+                    for (; i < strlen(string1); i++) {
+                        if (string1[i] == ']') {
+                            i++;
+                            array_flag = 1;
+                            break;
+                        }
+                    }
+                }
+                
+                    //special checks for array
+                if (array_flag) {
+                    array_flag = 0;
+                    Node_array *temp_array = get_array_node(temp_string1);
+                    if (temp_array == NULL || temp_array->location != function_identity) {
+                        printf("\n\e[34mprog\e[0m:%d array reference undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string1);  
+                    } else if (temp_array->type != arr_type) {
+                        printf("\n\e[34mprog\e[0m:%d array reference undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string1);                     
+                    }
+                                                     
+                } else if (check_IDE(temp_string1) && valid_variable(temp_string1)) {
                     printf("\n\e[34mprog\e[0m:%d variable undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string1);
                     
                 } 
                 start = i + 1;
+                free(temp_string1);
+            } else if (if_operand_lit(string1[i])) {
+                start = i + 2;
             }
         }
     }
-   
+    
+    free(temp_string);
 
+}
+
+void function_call_handler(char *string1, int param, int void_call) {         //checks if the function is void + if exists etc.
+
+    int i = 3;
+    for (; i < strlen(string1); i++) {
+        if (string1[i] == ' ') {
+            break;
+        }
+    }
+    
+    char *temp_string = makeString(3, i, string1);
+    
+    int temp = find_type_func(temp_string);
+    int param_count = find_func_param(temp_string);
+    
+    bool error_flag = false;
+    
+    if (temp == -1) {       //if incompatible type
+        printf("\n\e[34mprog\e[0m:%d invalid func call, function undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared function is reported only once\n\n", current_line, temp_string);
+        error_flag = true;
+    } else if ((temp == 0 || temp == 2) && void_call == 1) {           //if bool or int, invalid call        
+        printf("\n\e[34mprog\e[0m:%d invalid func call, no return error: '\e[31m%s\e[0m'\nnote: bool/int function expects assignment/comparison\n\n", current_line, temp_string);
+        error_flag = true;   
+    } else if (param == 0 && param_count != 0) {
+        printf("\n\e[34mprog\e[0m:%d invalid func call: '\e[31m%s\e[0m'\nnote: function expects parameter/s\n\n", current_line, temp_string);      
+        error_flag = true;   
+    } else if (param == 1 && param_count == 0) {
+        printf("\n\e[34mprog\e[0m:%d invalid func call, parameters given: '\e[31m%s\e[0m'\nnote: function expects none\n\n", current_line, temp_string);
+        error_flag = true;
+    } 
+    
+    if (error_flag == true) return;
+    
+    
+    if (param == 1 && param_count != -1) {  //function exists and we've called with arguments   
+    
+        i = i + 3;
+        int start = i;
+        int count = 0;
+        for (; i < strlen(string1); i++) {
+            if (string1[i] == ' ') {
+                count++;
+            } else if (string1[i] == '[') {
+                count = count - 3;
+            } else if (if_operand_lit(string1[i])) {
+                i++;
+            }           
+        }
+        
+        
+        Node_function *temp_func = get_function_node(temp_string);
+        if (count != temp_func->has_parameters) {
+            printf("\n\e[34mprog\e[0m:%d invalid func call, parameter mismatch: '\e[31m%s\e[0m'\nnote: function expects other\n\n", current_line, temp_string);
+        } else {
+        
+            int type_counter = 0;
+            int array_flag = 0;
+            
+            for (i = start; i < strlen(string1); i++) {
+                if (string1[i] == ' ') {                                        //when new var/int
+                                        
+                    char *temp_string1 = makeString(start, i, string1);
+                    
+                    //printf("hey\n");
+                    //printf("string is %s\n", temp_string1);
+                    //special check for array 
+                    if (string1[i + 1] == '[') {
+                        for (; i < strlen(string1); i++) {
+                            if (string1[i] == ']') {
+                                i++;
+                                array_flag = 1;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    
+                    if (array_flag == 1) {
+                        array_flag = 0;
+                        Node_array *temp_array = get_array_node(temp_string1);
+                        if (temp_array == NULL || temp_array->location != function_identity) {
+                            printf("\n\e[34mprog\e[0m:%d invalid func call, parameter undefined/unit.: '\e[31m%s\e[0m'\nnote: function expects other\n\n", current_line, temp_string1);                         
+                        
+                        } else if (temp_array->type != temp_func->parameter_types[type_counter++]) {
+                            printf("\n\e[34mprog\e[0m:%d invalid func call, parameter type mismatch: '\e[31m%s\e[0m'\nnote: function expects other\n\n", current_line, temp_string1); 
+                        }                             
+                        
+                    
+                    
+                    
+                    } else if (check_INT(temp_string1)) {                              //if int
+                        if (temp_func->parameter_types[type_counter] != 0) {
+                            printf("\n\e[34mprog\e[0m:%d invalid func call, parameter mismatch: '\e[31m%s\e[0m'\nnote: function expects non-int first argument\n\n", current_line, temp_string1); 
+                        }
+                        
+                    } else {                                                 //if identifier                    
+                    
+                        Node_local_variable *temp_var = get_local_var_node(temp_string1);
+                        if (temp_var == NULL || temp_var->location != function_identity || temp_var->value_set == false) {
+                            printf("\n\e[34mprog\e[0m:%d invalid func call, parameter undefined/unit.: '\e[31m%s\e[0m'\nnote: function expects other\n\n", current_line, temp_string1); 
+                            
+                             
+                        } else if (temp_var->type != temp_func->parameter_types[type_counter]) {
+                            printf("\n\e[34mprog\e[0m:%d invalid func call, parameter type mismatch: '\e[31m%s\e[0m'\nnote: function expects other\n\n", current_line, temp_string1); 
+                        }                                           
+                        type_counter++; 
+                        
+                    }
+                    start = i + 1; 
+                    free(temp_string1);                                                     
+                }
+            } 
+        }             
+    }
+    
+    free(temp_string);
+        
+        
+        
 }
 
 void array_handler(char *string1) {
@@ -319,7 +688,7 @@ void variable_set_handler(char *string1) {      //for array set, variable sets (
     }
 
     int error_flag = 0;
-    char *temp_string = makeString(3, i-1, string1);       
+    char *temp_string = makeString(3, i, string1);       
     int temp_val = check_local_variable_exists(temp_string, 0) + check_variable_exists(temp_string, 0);              
     
     if (temp_val == 0) {
@@ -333,22 +702,83 @@ void variable_set_handler(char *string1) {      //for array set, variable sets (
         
         if (type_variable != -1) {
             type_final = type_variable;
-        } else {
+        } else if (type_variable1 != -1) {
             type_final = type_variable1;
         }
+        
+        
         int start = i + 1;
+        int array_flag = 0;
+        int function_flag = 0;
+        int count_spaces = 0;
+        
         if (type_final == 0) {       //for integer
             for (i = start; i < strlen(string1); i++) {
                 if (string1[i] == ' ' || i == strlen(string1) - 1) {
                     char *temp_string1 = makeString(start, i, string1);
-                    if (check_IDE(temp_string1) && valid_variable(temp_string1)) {
-                        printf("\n\e[34mprog\e[0m:%d variable undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string1);
+                    
+                    //for arrays
+                    if (string1[i + 1] == '[') {
+                        for (; i < strlen(string1); i++) {
+                            if (string1[i] == ']') {
+                                i++;
+                                array_flag = 1;
+                                break;
+                            }
+                        }
+                    } else if (string1[i + 1] == '(') {
+                        function_flag = 1;
+                        for (; i < strlen(string1); i++) {
+                            if (string1[i] == ')') {
+                                i++;
+                                break;
+                            } else if (string1[i] == ' ') {
+                                count_spaces++;
+                            }
+                        }
+                    }
+                
+                if (function_flag) {
+                    char *real_string = makeString(start, i, string1);
+                    function_flag = 0;
+                    char *empty = "   ";
+                    char *new_string = malloc(strlen(real_string) + 4);
+                    strcpy(new_string, empty);
+                    strcat(new_string, real_string);
+                    
+                    if (count_spaces > 2) {
+                        function_call_handler(new_string, 1, 0);
+                    } else {
+                        function_call_handler(new_string, 0, 0);
+                    } 
+                    count_spaces = 0;
+                    
+                    //special checks for array
+                } else if (array_flag) {
+                    array_flag = 0;
+                    Node_array *temp_array = get_array_node(temp_string1);
+                    if (temp_array == NULL || temp_array->location != function_identity) {
+                        printf("\n\e[34mprog\e[0m:%d array reference undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string1);  
                         error_flag = 1;
                         
-                    } 
-                    start = i + 1;
-                }
+                    } else if (temp_array->type != type_final) {
+                        printf("\n\e[34mprog\e[0m:%d array reference type error: '\e[31m%s\e[0m'\nnote: incompatible type assignment\n\n", current_line, temp_string1);  
+                        error_flag = 1;
+                    }
+                    
+                } else if (check_IDE(temp_string1) && valid_variable(temp_string1)) {
+                    printf("\n\e[34mprog\e[0m:%d variable undeclared error (first use in this function): '\e[31m%s\e[0m'\nnote: each undeclared identifier is reported only once\n\n", current_line, temp_string1);
+                    error_flag = 1;
+                    
+                } 
+                free(temp_string1);
+                start = i + 1;
+            } else if (if_operand_lit(string1[i])) {
+                start = i + 2;
             }
+            
+        }
+            
         } else {            //for boolean
             for (i = start; i < strlen(string1); i++) {
                 if (string1[i] == ' ' || i == strlen(string1) - 1) {
@@ -356,7 +786,10 @@ void variable_set_handler(char *string1) {      //for array set, variable sets (
                     if (strcmp(temp_string1, "T_F") != 0) {
                         printf("\n\e[34mprog\e[0m:%d invalid boolean variable arithmetic: '\e[31m%s\e[0m'\nnote: boolean variables can only be true/false\n\n", current_line, temp_string1);   
                         error_flag = 1;
+                    } else if (if_operand_lit(string1[i])) {
+                        start = i + 2;
                     }
+                    free(temp_string1);
                 }
             }                     
         }
@@ -366,6 +799,8 @@ void variable_set_handler(char *string1) {      //for array set, variable sets (
         temp_val = check_local_variable_exists(temp_string, 1);
         temp_val = check_variable_exists(temp_string, 1);
     }
+    
+    free(temp_string);
         
 } 
 
@@ -380,7 +815,7 @@ unsigned int find_type_local_var(char *string1) {
 
     Node_local_variable *temp = head_local_variable;
     while (temp != NULL) {
-        if (strcmp(temp->name, string1) == 0) {
+        if (strcmp(temp->name, string1) == 0 && function_identity == temp->location) {
             return temp->type;
         }
         temp = temp->next;
@@ -389,7 +824,18 @@ unsigned int find_type_local_var(char *string1) {
     return -1;
 }
 
+unsigned int find_type_func(char *string1) {
 
+    Node_function *temp = head_function;
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0) {
+            return temp->type;
+        }
+        temp = temp->next;
+    }    
+
+    return -1;
+}
 
 
 unsigned int find_type_var(char *string1) {
@@ -450,8 +896,56 @@ void variable_handler(char *string1) {   //need check global/local
         }
         
         free(new_string);
-    }
+    }        
+}
+
+void multi_var_handler(char *string1) {
+
+    int temp_type = -1;
+    
+    switch(string1[3]){ 
+        case 'N':
+            temp_type = integer_type;
+            break;
+        case 'V':
+            temp_type = void_type;
+            break;
+        case 'T':
+            temp_type = boolean_type;
+            break;
+    }  
+            
+    if (temp_type == void_type) {
+        printf("can't be void\n");
+    } else {
+    
+        int i = 5;
+        int start = i;
         
+        for (; i < strlen(string1); i++) {
+            if (string1[i] == ' ' || i == strlen(string1) - 1) {
+                char *new_string = makeString(start, i, string1);
+                if (check_class(new_string)) {
+                
+                } else if (check_func(new_string)) {
+                  
+                } else if (check_variable(new_string)) {
+                
+                } else if (check_array(new_string)) {
+                             
+                } else {
+                    if (if_in_function == -1) { //if global
+                        insertNode_var(new_string, temp_type);
+                    } else {
+                        insertNode_local_var(new_string, temp_type);
+                    }
+                }
+                
+                free(new_string);
+                start = i + 1;
+            }
+        } 
+    }
 }
 
 void function_param_handler(char *string1) {
@@ -479,7 +973,7 @@ void function_param_handler(char *string1) {
         }
     }
     
-    char *new_string = makeString(5, i-1, string1);
+    char *new_string = makeString(5, i, string1);
     
     if (check_class(new_string)) {
     
@@ -494,7 +988,7 @@ void function_param_handler(char *string1) {
         insertNode_func(string1, temp_type, 1);
     }
      
-
+    free(new_string);
 
 }
 
@@ -582,7 +1076,7 @@ unsigned int check_array(char *string1) {
     Node_array *temp = head_array;
                 
     while (temp != NULL) {
-        if (strcmp(temp->name, string1) == 0) {
+        if (strcmp(temp->name, string1) == 0 && temp->location == function_identity) {
             printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, temp->line_number);  
             return 1;
         }
@@ -653,6 +1147,19 @@ unsigned int check_local_variable(char *string1) {    //checks if it exists, if 
     return 0;
 }
 
+unsigned int find_func_param(char *string1) {
+
+    Node_function *temp = head_function;
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0) {
+            return temp->has_parameters;
+        }
+        temp = temp->next;
+    }
+
+    return -1;
+
+}
 
 unsigned int check_variable_exists(char *string1, int make_true) {     
 
@@ -726,6 +1233,7 @@ Node_array *makeNode_array(char *string1, unsigned int type_var, unsigned int si
     newNode->line_number = current_line;
     newNode->type = type_var;
     newNode->size_array = size;
+    newNode->location = function_identity;
     
     newNode->value_set = malloc(sizeof(int) * size);
     int i;
@@ -773,6 +1281,47 @@ Node_class *makeNode_class(char *string1) {
     return newNode;
 }
 
+Node_function *get_function_node(char *string1) {
+
+    Node_function *temp = head_function;
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0) {
+            return temp;
+        }
+        temp = temp->next;
+    }
+    
+    return temp;
+}
+
+Node_local_variable *get_local_var_node(char *string1) {        //returns var in local scope
+
+    Node_local_variable *temp = head_local_variable;
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0 && temp->location == function_identity) {
+            return temp;
+        }
+        temp = temp->next;
+    }
+    
+    return temp;
+
+}
+
+Node_array *get_array_node(char *string1) {
+
+    Node_array *temp = head_array;
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0 && temp->location == function_identity) {
+            return temp;
+        }
+        temp = temp->next;
+    }
+    
+    return temp;
+}
+
+
 Node_function *makeNode_function(char *string1, unsigned int type_var, int if_parameter) {
 
     Node_function *newNode = malloc(sizeof(struct node_function));
@@ -794,6 +1343,8 @@ Node_function *makeNode_function(char *string1, unsigned int type_var, int if_pa
         newNode->name = malloc(strlen(temp_string) + 1);
         strcpy(newNode->name, temp_string);
       
+        free(temp_string);
+        
         int start_param = 0;
         int count = 0;
         for (int i = 0; i < strlen(string1); i++) {
@@ -828,6 +1379,7 @@ Node_function *makeNode_function(char *string1, unsigned int type_var, int if_pa
                 } else {
                     char *temp_string = makeString(start_variable, i, string1);
                     insertNode_local_var(temp_string, newNode->parameter_types[parameter_count - 1]);
+                    free(temp_string);
                 }
             }            
         }
@@ -973,14 +1525,14 @@ void printList_all() {
     }
     
     Node_array *temp4 = head_array;
-    printf("Array list: \n");
+    printf("Local array list: \n");
     
     if (temp4 != NULL) {
         while (temp4->next != NULL) {
-            printf("\e[32m%s\e[0m(%d)(%d)->", temp4->name, temp4->type, temp4->size_array);
+            printf("\e[32m%s\e[0m(%d)(%d)(%d)->", temp4->name, temp4->type, temp4->size_array, temp4->location);
             temp4 = temp4->next;
         }
-        printf("\e[32m%s\e[0m(%d)(%d)\n", temp4->name, temp4->type, temp4->size_array);
+        printf("\e[32m%s\e[0m(%d)(%d)(%d)\n", temp4->name, temp4->type, temp4->size_array, temp4->location);
     }
       
 
@@ -1048,21 +1600,89 @@ unsigned int check_IDE(char *input) {      //return 1 if identifier
 
     int return_value = 1;
     
+    if (input == NULL || strlen(input) == 0) {
+        return 0;
+    }
+       
     if (!isalpha(input[0]) && input[0] != '_') {
         return 0;
     } else {
-        for (int i = 1; i < strlen(input); i++) {
-            if (!isdigit(input[i]) && !isalpha(input[i]) && input[i] != '_') {
-                return 0;
-            }
-        }                          
+        if (strlen(input) > 1) {
+            for (int i = 1; i < strlen(input); i++) {
+                if (!isdigit(input[i]) && !isalpha(input[i]) && input[i] != '_') {
+                    return 0;
+                }
+            }   
+        }                        
     }
 
     return return_value;
 }
 
 
+void free_all() {
 
+/*
+    Node_class *free_list = head_class;
+    
+    while (free_list != NULL) {
+        Node_class *temp = free_list->next;
+        free(free_list->name);
+        free(free_list);
+        free_list = NULL;
+        free_list = temp;
+    }
+   
+    free(head_class);
+    
+    Node_function *free_list1 = head_function;
+    while (free_list1 != NULL) {
+        Node_function *temp = free_list1->next;
+        free(free_list1->name);
+        free(free_list1);
+        free_list = NULL;
+        free_list1 = temp;
+    }
+      
+    free(head_function);
+  //  head_function = NULL;
+    
+
+    
+    Node_variable *free_list2 = head_variable;
+
+    while (free_list2 != NULL) {
+        Node_variable *temp = free_list2->next;
+        free(free_list2->name);
+        free(free_list2);
+        free_list2 = NULL;
+        free_list2 = temp;
+    }
+    
+    free(head_variable);
+    head_variable = NULL;
+    
+    Node_array *free_list3 = head_array;
+
+    while (free_list3 != NULL) {
+        Node_array *temp = free_list3->next;
+        free(free_list3);
+        free_list3 = temp;
+    }
+    
+    free(head_array);
+      
+    Node_local_variable *free_list4 = head_local_variable;
+    
+    while (free_list4 != NULL) {
+        Node_local_variable *temp = free_list4->next;
+        free(free_list4->name);
+        free(free_list4);
+        free_list4 = temp;
+    }
+*/
+    
+}
 
 
 

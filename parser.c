@@ -56,6 +56,7 @@ Then pop everything off and check
 #define IDENTIFIER 3
 
 unsigned int bracket_count = 0;             // {} count
+unsigned int in_loop = 0;                   //flag if we're in loop
 unsigned int line = 1;                      //line number
 unsigned int order_count = 0;               //what item up to
 
@@ -78,6 +79,7 @@ unsigned int in_function = 0;
 
     
 void pushLine() {
+    
     
     char *full_path = "parser_tests/legal-M";
     
@@ -115,6 +117,7 @@ void pushLine() {
     semantic_handler();
     
     fclose(fp);
+    
 
 }
 
@@ -187,6 +190,12 @@ void push(char* string1, char *string2) {
                 push_complete("X");
                 semantic_line[line_array++] = line;
             }
+            
+            if (in_loop != 0 && bracket_count < in_loop) {
+                push_complete("Q: EOL");
+                in_loop = 0;
+            }
+            
             bracket_stack.top = 0;
             s.top = 0;
             order_count = 0;
@@ -204,15 +213,18 @@ void push(char* string1, char *string2) {
             check_bracket_stack();
             pure_push_names(")"); 
         } else if (strcmp(string1, "]") == 0) {
+            pure_push_names("]");
             array_check();             
         } else if (strcmp(string1, "[") == 0) {
             pure_push_names("[");
             pure_push(string1); 
         } else if (if_operand(string1)) {
-            //pure_push_names(string2);         
+            pure_push_names(string2);         
             pure_push(string1);
         } else if (strcmp(string1, "SPECIAL") == 0 && strcmp(string2, "callout") == 0) {
             //pure_push_names(string2);
+            pure_push(string2);
+        } else if (strcmp(string1, "SPECIAL") == 0) {
             pure_push(string2);
         } else if (strcmp(string1, "BOOLEANLITERAL") == 0 && strcmp(string2, "T_F") == 0) {
             pure_push_names(string2);
@@ -360,10 +372,10 @@ void array_check() {
     if ((strcmp(temp1, "INTLITERAL") == 0 || strcmp(temp1, "IDENTIFIER") == 0) && strcmp(temp2, "[") == 0) {    
         if (strcmp(temp3, "CHAR/INT IDENTIFIER") == 0) {        //int a[5], int a[b], int a[func()], etc.
             pure_push("ARR DECL");
-            pure_push_names("]");
+            //pure_push_names("]");
         } else if (strcmp(temp3, "IDENTIFIER") == 0 || strcmp(temp3, "INTLITERAL") == 0) {      //array references get reduced too soon, will check 7[5] errors in semantic
             pure_push("ARRAY REFERENCE");                            //a[5], a[i]
-            pure_push_names("]");
+            //pure_push_names("]");
         } else {
             pure_push(temp3);
         }
@@ -412,12 +424,13 @@ void check_bracket_stack() {
             printf("Invalid integer call: %d\n", line);
             pure_push(temp1);
             pure_push(temp);           
+
             
         } else if (if_integer(temp) && strcmp(temp1, "IDENTIFIER") == 0 && order[order_count - 1] != LEFT_BRACKET) {        //func(1)
             pure_push("FUNC CALL w/ARG");                     
             function_call_check();
-            
-            
+                             
+                       
         } else if ((strcmp(temp, "ARGUMENTS") == 0 || strcmp(temp, "ARGUMENTS_DOUBLE") == 0) && strcmp(temp1, "IDENTIFIER") == 0 && order[order_count - 1] != LEFT_BRACKET) {   //func(1, 2)
             pure_push("FUNC CALL w/ARG");
             function_call_check(); 
@@ -433,8 +446,17 @@ void check_bracket_stack() {
             pure_push(temp1);
             pure_push("FUNC CALL");
             function_call_check();
-            
-            
+
+        } else if ((strcmp(temp, "ARGUMENTS") == 0 || strcmp(temp, "ARGUMENTS_DOUBLE") == 0) && strcmp(temp1, "IDENTIFIER") == 0) {
+            char *temp2 = pop();
+            printf("temp2 is %s\n", temp2);
+            if (if_operand(temp2) || strcmp(temp2, "EQUAL") == 0) {  
+                pure_push(temp2);
+                check_integer();          
+            } else {
+                pure_push(temp2);
+            }           //issue here is we're reducing before arguments part so it becomes, ident = int arg_double
+               
         } else {
             char *temp2 = pop();
             char *temp3 = pop();
@@ -596,6 +618,7 @@ unsigned int check_loop() {
         return_value = 1;
         semantic_info.top = 0;
         semantic_line[line_array++] = line;
+        in_loop = bracket_count;
     } else {
         pure_push(temp4);
         pure_push(temp3);
@@ -606,6 +629,7 @@ unsigned int check_loop() {
     if (strcmp(semantic, "") != 0) {
         free(semantic);
     }
+   
     
     
     return return_value;
@@ -777,6 +801,19 @@ void check_statement() {
             printf("Invalid variable value: %d\n", line);
         }
         
+    } else if (strcmp(temp, "break") == 0) {
+        if (stack_size == 1) {
+            push_complete("O: break");
+        } else {
+            printf("Invalid break statement: %d\n", line);
+        }
+        
+    } else if (strcmp(temp, "continue") == 0) {
+        if (stack_size == 1) {
+            push_complete("P: continue");
+        } else {
+            printf("Invalid continue statement: %d\n", line);
+        }
         
     } else if (strcmp(temp, "MULTI CHAR/INT IDENTIFIER") == 0) {
         if (stack_size == 1) {
@@ -925,3 +962,7 @@ void check_integer() {
     }
     
 }
+
+
+
+

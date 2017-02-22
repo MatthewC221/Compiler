@@ -160,7 +160,10 @@ void checkLine_parse(char *input, int line) {    //parse checkline
             starting_token = i;
         }
         
-        if (input[i] == '"' && input[i - 1] != '\\') {
+        if (input[i] == '/' && input[i + 1] == '/') {
+            return;                
+        
+        } else if (input[i] == '"' && input[i - 1] != '\\') {
             type = 5;                                                          //for string literals
             string_lit = !string_lit;
         } else if (input[i] == '\\' && (string_lit)) {                                   //within string literals cancel next
@@ -255,7 +258,7 @@ int printRange(int start, int end, char *string) {
     //Checks what has been passed and throws errors
 
 
-    if (start == end && (string[start] == '\n' || string[start] == ' ')) {
+    if (start == end && (string[start] == '\n' || string[start] == ' ' || string[start] == '\t')) {
         return EXIT_SUCCESS;
     }
 
@@ -316,8 +319,9 @@ char *makeString(int start, int end, char *string) {
     for (i = 0, j = start; j <= end; j++, i++) {
         new_string[i] = string[j];
     }
-
+    
     return new_string;
+
 }
 
 int checkCharLiteral(char *test) {
