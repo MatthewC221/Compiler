@@ -58,11 +58,14 @@ Then pop everything off and check
 unsigned int bracket_count = 0;             // {} count
 unsigned int in_loop = 0;                   //flag if we're in loop
 unsigned int line = 1;                      //line number
+unsigned int column = 0;
 unsigned int order_count = 0;               //what item up to
 
 unsigned int line_array = 0;                 //put line number into array
 
 //For managing if/else conditionals
+
+char *previous_string;                      //basically a look ahead
 
 unsigned int look_ahead = 0;
 unsigned int conditional_flag = 0;
@@ -71,6 +74,8 @@ unsigned int else_statement = 0;
 
 unsigned int function_bracket = 0;
 unsigned int in_function = 0;
+
+char *current_line;
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,7 +86,7 @@ unsigned int in_function = 0;
 void pushLine() {
     
     
-    char *full_path = "parser_tests/legal-M";
+    char *full_path = "parser_tests/all";
     
     FILE *fp;
     printf("full path is %s\n", full_path);
@@ -98,6 +103,8 @@ void pushLine() {
     
     int number = 1;
     while (fgets(buf, 255, fp)) {
+        current_line = malloc(sizeof(char) * strlen(buf) + 1);
+        strcpy(current_line, buf);
         checkLine_parse(buf, number++);
         line++;
     }
@@ -143,13 +150,12 @@ char *pop_semantic() {
     return semantic_info.stk[semantic_info.top];
 }
 
-void push(char* string1, char *string2) {              
+void push(char* string1, char *string2, int end) {              
 
 //PRIMARY FUNCTION: checks if we can reduce (string1 is new string), else push in
 //string2 is name of variables/classes/etc.
 
-
-
+    column = end;
     if (s.top == (MAXSIZE - 1)) {
         printf("Stack is full\n");
     } else {
@@ -181,7 +187,7 @@ void push(char* string1, char *string2) {
         } else if (strcmp(string1, ";") == 0) {     //to indicate end of statement
             check_statement();                      
         } else if (strcmp(string1, "}") == 0) {     //invalid stack if items remaining
-            if (s.top > 1) {
+            if (s.top > 0) {
                 printf("Premature end of statement, stack has %d elements: %s\n", s.top, string1);
             }
             bracket_count--;
@@ -250,6 +256,11 @@ void push(char* string1, char *string2) {
             pure_push(string1);
         }
         order_count++;
+        if (strcmp(string1, "(") != 0 && strcmp(string1, ")") != 0) {
+            previous_string = malloc(sizeof(char) * strlen(string1) + 1);
+            strcpy(previous_string, string1);
+        }
+        
                
     }
 }
@@ -314,7 +325,7 @@ void function_call_check() {
         pure_push(temp1);
         pure_push("INTLITERAL");
         
-    } else if (strcmp(temp1, "OPERAND") == 0 && if_integer(temp2)) {            //b = a + 2 + ... + 3 * func();
+    } else if (if_operand(temp1) && if_integer(temp2)) {            //b = a + 2 + ... + 3 * func();
         pure_push("INTLITERAL");
         
     } else if (strcmp(temp1, ",") == 0 && if_integer(temp2)) {                  //func(b, func(1,2)); DOESN'T CURRENTLY WORK...
@@ -413,15 +424,16 @@ void pure_push_bracket(char *string1) {
 
 void check_bracket_stack() {
 
+    //printf("PREV = %s\n", previous_string);
     if (bracket_stack.top == 0) {
         fprintf(stderr, "Unmatched bracket \"(\"\n");
     } else {
         bracket_stack.top--;
         char *temp = pop();
         char *temp1 = pop();
-                
+              
         if (order[order_count - 1] == LEFT_BRACKET && order[order_count - 2] == INT_LITERAL) {      //8()
-            printf("Invalid integer call: %d\n", line);
+            printf("Invalid integer call: %d:%d\n", line, column);
             pure_push(temp1);
             pure_push(temp);           
 
@@ -447,9 +459,8 @@ void check_bracket_stack() {
             pure_push("FUNC CALL");
             function_call_check();
 
-        } else if ((strcmp(temp, "ARGUMENTS") == 0 || strcmp(temp, "ARGUMENTS_DOUBLE") == 0) && strcmp(temp1, "IDENTIFIER") == 0) {
+        } else if ((strcmp(temp, "ARGUMENTS") == 0 || strcmp(temp, "ARGUMENTS_DOUBLE") == 0) && strcmp(temp1, "INTLITERAL") == 0 && strcmp(previous_string, "IDENTIFIER") == 0) {
             char *temp2 = pop();
-            printf("temp2 is %s\n", temp2);
             if (if_operand(temp2) || strcmp(temp2, "EQUAL") == 0) {  
                 pure_push(temp2);
                 check_integer();          
@@ -539,9 +550,9 @@ char *semantic_string () {
         unsigned int counter = 0;
         for (i = 0; i < semantic_info.top; i++) {
             counter = counter + strlen(semantic_info.stk[i]);
-       //     printf("info %d = %s\n", i, semantic_info.stk[i]);
+       //     printf("info %d:%d = %s\n", i, semantic_info.stk[i]);
         }
-       // printf("size is %d, space created = %d\n", semantic_info.top, counter + semantic_info.top + 1);
+       // printf("size is %d:%d, space created = %d:%d\n", semantic_info.top, counter + semantic_info.top + 1);
         string = calloc(counter + semantic_info.top, 1);
         strcpy(string, semantic_info.stk[0]);
         for (i = 1; i < semantic_info.top; i++) {
@@ -558,7 +569,17 @@ char *semantic_string () {
 void identifier_reduce(char *string) {    
 
     char *former_string = pop();
-    char *former_string1 = pop();       
+    if (get_next() == '(' && if_operand(former_string)) {            //not an identifier, is a function
+        printf("AVOIDED\n");
+        pure_push(former_string);
+        pure_push("IDENTIFIER");
+        //check_bracket_stack();
+        return;
+    }
+
+    char *former_string1 = pop();   
+    
+        
     if (strcmp(former_string, "CLASSLITERAL") == 0) {       //class Program
         pure_push(former_string1);
         pure_push("CLASS IDENTIFIER");
@@ -650,14 +671,14 @@ void check_function() {        //for functions, classes and conditionals
             free(string);
             semantic_line[line_array++] = line;
         } else {
-            printf("Invalid class declaration: %d %s\n", line, temp);
+            printf("Invalid class declaration: %d:%d %s\n", line, column, temp);
         }
         
         
     } else if (strcmp(temp, "MAIN FUNC") == 0) {    //MAIN
         if (stack_size == 1) {
             if (in_function == 1) {
-                printf("Invalid function declaration within another function: %d\n", line);
+                printf("Invalid function declaration within another function: %d:%d\n", line, column);
             } else {
                 in_function = 1;
                 function_bracket = bracket_count;
@@ -667,14 +688,14 @@ void check_function() {        //for functions, classes and conditionals
                 semantic_line[line_array++] = line;
             }
         } else {
-            printf("Invalid main function: %d %s\n", line, temp);
+            printf("Invalid main function: %d:%d %s\n", line, column, temp);
         }
     
         
     } else if (strcmp(temp, "FUNC DECLARATION") == 0) { //NORMAL FUNC
         if (stack_size == 1) {
             if (in_function == 1) {
-                printf("Invalid function declaration within another function: %d\n", line);
+                printf("Invalid function declaration within another function: %d:%d\n", line, column);
             } else {
                 in_function = 1;
                 function_bracket = bracket_count;
@@ -686,14 +707,14 @@ void check_function() {        //for functions, classes and conditionals
             //pure_push_names("End ARG");
             //display_semantic();
         } else {
-            printf("Invalid function declaration: %d %s\n", line, temp);
+            printf("Invalid function declaration: %d:%d %s\n", line, column, temp);
         }
         
     } else if (strcmp(temp, "FUNC DECLARATION w/PARAM") == 0) { //FUNC DECL WITH PARAMETERS
         if (stack_size == 1) {
             //push_complete("FUNCTION DECLARED w/PARAM");
             if (in_function == 1) {
-                printf("Invalid function declaration within another function: %d\n", line);
+                printf("Invalid function declaration within another function: %d:%d\n", line, column);
             } else {
                 in_function = 1;
                 function_bracket = bracket_count;
@@ -705,7 +726,7 @@ void check_function() {        //for functions, classes and conditionals
            // pure_push_names("End ARG");
            // display_semantic();
         } else {
-            printf("Invalid parameters to function declaration: %d %s\n", line, temp);
+            printf("Invalid parameters to function declaration: %d:%d %s\n", line, column, temp);
         }
         
         
@@ -718,14 +739,14 @@ void check_function() {        //for functions, classes and conditionals
             if_statement++;
             semantic_line[line_array++] = line;
         } else {
-            printf("Invalid conditional: %d %s\n", line, temp);
+            printf("Invalid conditional: %d:%d %s\n", line, column, temp);
         }        
     
     } else {
         char *temp2 = pop();
         if (strcmp(temp, "else") == 0 && strcmp(temp2, "}") == 0) {     //ELSE
             if (stack_size != 2 || conditional_flag < 1) {
-                printf("Invalid else statement: %d %s\n", line, temp);
+                printf("Invalid else statement: %d:%d %s\n", line, column, temp);
             } else {
                 char *string = join_string("6", semantic);
                 push_complete(string);
@@ -744,12 +765,12 @@ void check_function() {        //for functions, classes and conditionals
                 if_statement++;
                 semantic_line[line_array++] = line;
             } else {
-                printf("Invalid conditional statement: %d %s\n", line, temp);
+                printf("Invalid conditional statement: %d:%d %s\n", line, column, temp);
             }
             
             
         } else {
-            printf("Invalid use of function/class/conditional: %d %s\n", line, temp);
+            printf("Invalid use of function/class/conditional: %d:%d %s\n", line, column, temp);
         }
     }
 
@@ -785,7 +806,7 @@ void check_statement() {
             free(string);
             semantic_line[line_array++] = line;
         } else {
-            printf("Invalid variable initialisation: %d\n", line);
+            printf("Invalid variable initialisation: %d:%d\n", line, column);
         }
         
         
@@ -798,21 +819,21 @@ void check_statement() {
             semantic_line[line_array++] = line;
             //display_semantic();
         } else {
-            printf("Invalid variable value: %d\n", line);
+            printf("Invalid variable value: %d:%d\n", line, column);
         }
         
     } else if (strcmp(temp, "break") == 0) {
         if (stack_size == 1) {
             push_complete("O: break");
         } else {
-            printf("Invalid break statement: %d\n", line);
+            printf("Invalid break statement: %d:%d\n", line, column);
         }
         
     } else if (strcmp(temp, "continue") == 0) {
         if (stack_size == 1) {
             push_complete("P: continue");
         } else {
-            printf("Invalid continue statement: %d\n", line);
+            printf("Invalid continue statement: %d:%d\n", line, column);
         }
         
     } else if (strcmp(temp, "MULTI CHAR/INT IDENTIFIER") == 0) {
@@ -822,7 +843,7 @@ void check_statement() {
             free(string);
             semantic_line[line_array++] = line; 
         } else {
-            printf("Invalid multi-variable initialisation: %d\n", line);
+            printf("Invalid multi-variable initialisation: %d:%d\n", line, column);
         }          
         
     } else if (if_integer(temp) && strcmp(temp1, "EQUAL") == 0 && strcmp(temp2, "ARRAY REFERENCE") == 0) {
@@ -834,7 +855,7 @@ void check_statement() {
             semantic_line[line_array++] = line;
             //display_semantic();
         } else {
-            printf("Invalid array reference: %d\n", line);
+            printf("Invalid array reference: %d:%d\n", line, column);
         }
         
         
@@ -847,7 +868,7 @@ void check_statement() {
            // push_complete("ARRAY INITIALISATION");
            // display_semantic();
         } else {
-            printf("Invalid array initialisation: %d\n", line);
+            printf("Invalid array initialisation: %d:%d\n", line, column);
         }
     
     } else if (strcmp(temp, "C_LIB_STR+PARAM") == 0 && strcmp(temp1, "callout") == 0) {
@@ -861,7 +882,7 @@ void check_statement() {
             //pure_push_names("))");
             //display_semantic();
         } else {
-            printf("Invalid callout attempt: %d\n", line);
+            printf("Invalid callout attempt: %d:%d\n", line, column);
         } 
         
     } else if (strcmp(temp, "C_LIB_STR") == 0 && strcmp(temp1, "callout") == 0) {
@@ -874,7 +895,7 @@ void check_statement() {
             semantic_line[line_array++] = line;
             //display_semantic();
         } else {
-            printf("Invalid callout attempt: %d\n", line);
+            printf("Invalid callout attempt: %d:%d\n", line, column);
         }    
         
     } else if (strcmp(temp, "INTLITERAL") == 0 && strcmp(temp1, "RETURN") == 0 && stack_size == 2) {
@@ -923,7 +944,7 @@ void check_statement() {
         semantic_line[line_array++] = line;
         
     } else {
-        printf("Invalid statement: %d %s\n", line, temp);
+        printf("Invalid statement: %d:%d %s\n", line, column, temp);
     }
     
     if (bracket_stack.top != 0) {
@@ -962,6 +983,43 @@ void check_integer() {
     }
     
 }
+
+char get_next() {
+
+    int temp = column + 1;
+    for (; temp < strlen(current_line); temp++) {
+        if (current_line[temp] != ' ') {
+            //printf("line number %d, col %d, returning %c\n", line, column, current_line[temp]);
+            return current_line[temp];
+        }
+    }
+    
+    return '!';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

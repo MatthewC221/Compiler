@@ -526,61 +526,61 @@ void pushRange(int start, int end, char *string) {  //parser func
         checkString(new_string);
         switch (type) {
             case 0:
-                push(new_string, "");
+                push(new_string, "", end);
                 break;
 		    case 1:
-			    push("INTLITERAL", new_string);
+			    push("INTLITERAL", new_string, end);
 			    break;
 		    case 2:
-			    push("CHARLITERAL", "");
+			    push("CHARLITERAL", "", end);
 			    break;
 		    case 3:
-			    push("IDENTIFIER", new_string);
+			    push("IDENTIFIER", new_string, end);
 			    break;
 		    case 4:
-		        push("BOOLEANLITERAL", "T_F");
+		        push("BOOLEANLITERAL", "T_F", end);
 	            break;
             case 5:
-                push("STRINGLITERAL", new_string);       //string literal done seperately, it's okay
+                push("STRINGLITERAL", new_string, end);       //string literal done seperately, it's okay
                 break;
 		    case 6:
-		        push("CLASSLITERAL", new_string);
+		        push("CLASSLITERAL", new_string, end);
 	            break;
 		    case 7:
-		        push("MAIN", "");
+		        push("MAIN", "", end);
 	            break;
 		    case 8:
-		        push("TYPE", new_string);
+		        push("TYPE", new_string, end);
 	            break;
 		    case 9:
-		        push("CONDITIONAL", "");
+		        push("CONDITIONAL", "", end);
 	            break;
 	        case 10:
-	            push("FUNCTION IDENTIFIER", "");
+	            push("FUNCTION IDENTIFIER", "", end);
                 break;
 	        case 11:
-	            push("OPERAND", new_string);
+	            push("OPERAND", new_string, end);
                 break;
 	        case 12:
-	            push("EQUAL", "");
+	            push("EQUAL", "", end);
                 break;
 	        case 13:
-	            push("CONDITIONAL OPERAND", new_string);
+	            push("CONDITIONAL OPERAND", new_string, end);
                 break;
 	        case 14:
-	            push("RETURN", "");
+	            push("RETURN", "", end);
                 break;
 	        case 15:
-	            push("SPECIAL", new_string);
+	            push("SPECIAL", new_string, end);
                 break;
 	        case 16:
-	            push("AND/OR", "");
+	            push("AND/OR", "", end);
                 break;
             case 17:
-                push(new_string, "");   //else, for
+                push(new_string, "", end);   //else, for
                 break;
             case 18:
-                push("PLUS/MINUS", new_string);
+                push("PLUS/MINUS", new_string, end);
                 break;
 	    }
     }

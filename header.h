@@ -46,7 +46,7 @@ struct Stack bracket_stack;     // for ( ) brackets, check if previous was ident
 
 void checkLine_parse(char *input, int line);
 //parser functions
-void push(char *string1, char *string2);
+void push(char *string1, char *string2, int end);
 char *pop(void);
 void display(void);
 void display_current(void);
@@ -68,6 +68,8 @@ unsigned int if_operand(char *string1);
 unsigned int check_loop();
 void check_string(char *string1);
 
+char get_next();
+
 //semantic structs
 typedef struct node_var {       //both global and non-global
     char *name;
@@ -83,6 +85,7 @@ typedef struct node_array {       //both global and non-global
     struct node_array *next;
     unsigned int line_number;
     unsigned int size_array;
+    unsigned int location;
     unsigned int *value_set;
     unsigned int *value;
     unsigned int type;
@@ -136,6 +139,10 @@ Node_class *makeNode_class(char *string1);
 Node_function *makeNode_function(char *string1, unsigned int type, int if_parameter);
 Node_array *makeNode_array(char *string1, unsigned int type, unsigned int size);
 
+Node_function *get_function_node(char *string1);
+Node_local_variable *get_local_var_node(char *string1);
+Node_array *get_array_node(char *string1);
+
 void printList_all();
 //void printList_function();
 //void printList_class();
@@ -146,10 +153,14 @@ void class_handler(char *string1);      //handles class
 void function_handler(char *string1);       //handles func w/o param
 void variable_handler(char *string1);       //handles variable init
 void array_handler(char *string1);               //handles array init
+void conditional_handler(char *string1);
+void special_conditional_handler(char *string1);
 
 void variable_set_handler(char *string1);                           //handles variable set
 void array_set_handler(char *string1);   
 void function_param_handler(char *string1);                           //handles array set
+void multi_var_handler(char *string1);
+void function_call_handler(char *string1, int param, int void_call);
 
 unsigned int check_variable(char *string1);                         //checks if variable/class/func/array exists
 unsigned int check_class(char *string1);
@@ -159,8 +170,11 @@ unsigned int check_local_variable(char *string1);
 
 unsigned int check_IDE(char *input);                                //checks if string is integer/IDE
 unsigned int check_INT(char *string);
+
 unsigned int find_type_var(char *string1);                          //finds the type of the var
 unsigned int find_type_local_var(char *string1);
+unsigned int find_type_func(char *string1);
+unsigned int find_func_param(char *string1);
 
 unsigned int check_variable_exists(char *string, int make_true);    //checks if var exists, if does set it to init.
 unsigned int check_array_exists(char *string1);
@@ -170,7 +184,7 @@ unsigned int if_operand_lit(char a);                                //checks if 
 unsigned int valid_variable(char *string1);
 unsigned int check_location(char *string1);
 
-
+void free_all();
 
 
 

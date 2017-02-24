@@ -498,6 +498,13 @@ void function_call_handler(char *string1, int param, int void_call) {         //
     
     if (error_flag == true) return;
     
+    Node_function *temp_func = get_function_node(temp_string);
+    
+    if (void_call == 0 && temp_func->type == void_type) {
+        printf("\n\e[34mprog\e[0m:%d invalid func call: '\e[31m%s\e[0m'\nnote: function returns void\n\n", current_line, temp_string);
+        return;  
+    } 
+    
     
     if (param == 1 && param_count != -1) {  //function exists and we've called with arguments   
     
@@ -513,9 +520,9 @@ void function_call_handler(char *string1, int param, int void_call) {         //
                 i++;
             }           
         }
+             
         
         
-        Node_function *temp_func = get_function_node(temp_string);
         if (count != temp_func->has_parameters) {
             printf("\n\e[34mprog\e[0m:%d invalid func call, parameter mismatch: '\e[31m%s\e[0m'\nnote: function expects other\n\n", current_line, temp_string);
         } else {
