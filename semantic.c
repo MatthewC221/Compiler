@@ -246,6 +246,7 @@ void special_conditional_handler(char *string1) {
                 array_flag = 1;
             } else if (string1[i + 1] == '(') {
                 function_flag = 1;
+                i++;
                 for (; i < strlen(string1); i++) {
                     if (string1[i] == ')') {
                         i++;
@@ -266,11 +267,12 @@ void special_conditional_handler(char *string1) {
         char *new_string = malloc(strlen(temp_string) + 4);
         strcpy(new_string, empty);
         strcat(new_string, temp_string);
-        if (count_spaces > 2) {
+        if (count_spaces >= 2) {
             function_call_handler(new_string, 1, 0);
         } else {
             function_call_handler(new_string, 0, 0);
-        }       
+        }    
+        count_spaces = 0;   
     } else if (array_flag) {
         Node_array *temp_array = get_array_node(temp_string);
         if (temp_array == NULL || temp_array->location != function_identity) {
@@ -290,18 +292,34 @@ void special_conditional_handler(char *string1) {
 void conditional_handler(char *string1) {
 
     int array_flag = 0;
+    int func_flag = 0;
+    int count_spaces = 0;
     int i = 5;
     int start = i;
+    
     for (; i < strlen(string1); i++) {
         if (string1[i] == ' ') {
             if (string1[i + 1] == '[') {
                 array_flag = 1;
-            }
+            } 
             break;
         }
     }
 
     char *temp_string = makeString(start, i-1, string1);
+    
+    if (string1[i + 1] == '(' && check_IDE(temp_string)) {
+        func_flag = 1;
+        i++;
+        while (1) {
+            if (string1[i] == ')') {
+                break;
+            } else if (string1[i] == ' ') {
+                count_spaces++;
+            }
+            i++;
+        }
+    }
     
     int first_type = -1;
     
@@ -314,6 +332,21 @@ void conditional_handler(char *string1) {
         } else {
             first_type = temp_array->type;
         } 
+    } else if (func_flag) {
+        Node_function *temp = get_function_node(temp_string);
+        char *temp_string1 = makeString(start, i, string1);
+        char *empty = "   ";
+        char *new_string = malloc(strlen(temp_string1) + 4);
+        strcpy(new_string, empty);
+        strcat(new_string, temp_string1);
+        if (count_spaces >= 2) {
+            function_call_handler(new_string, 1, 0);
+        } else {
+            function_call_handler(new_string, 0, 0);
+        }
+        if (temp != NULL) first_type = temp->type;
+        count_spaces = 0;
+       
     } else if (check_IDE(temp_string)) {
         int global_type = find_type_var(temp_string);
         int local_type = find_type_local_var(temp_string);
@@ -331,6 +364,8 @@ void conditional_handler(char *string1) {
     }    
     
     int start_count = 0;
+    func_flag = 0;
+    array_flag = 0;
     
     for (; i < strlen(string1); i++) {
         if ((string1[i] == '>' || string1[i] == '<' || string1[i] == '=') && string1[i + 1] == ' ') {
@@ -348,7 +383,21 @@ void conditional_handler(char *string1) {
     char *temp_string1 = makeString(start, i-1, string1);
 
     int second_type = -1;
-
+    
+    if (string1[i + 1] == '(' && check_IDE(temp_string1)) {
+        func_flag = 1;
+        i++;
+        while (1) {
+            if (string1[i] == ')') {
+                break;
+            } else if (string1[i] == ' ') {
+                count_spaces++;
+            }
+            i++;
+        }
+    }    
+    
+   
     if (array_flag) {
         array_flag = 0;
         Node_array *temp_array = get_array_node(temp_string1);
@@ -358,6 +407,25 @@ void conditional_handler(char *string1) {
         } else {
             second_type = temp_array->type;
         } 
+    } else if (func_flag) {
+
+        Node_function *temp_func = get_function_node(temp_string1);
+
+        char *temp_string2 = makeString(start, i, string1);
+        char *empty = "   ";
+        char *new_string = malloc(strlen(temp_string2) + 4);
+        strcpy(new_string, empty);
+        strcat(new_string, temp_string2);
+
+        if (count_spaces >= 2) {
+            function_call_handler(new_string, 1, 0);
+        } else {
+            function_call_handler(new_string, 0, 0);
+        }
+        if (temp_func != NULL) {
+            second_type = temp_func->type;
+        }
+        count_spaces = 0;
     } else if (check_IDE(temp_string1)) {
         int global_type = find_type_var(temp_string1);
         int local_type = find_type_local_var(temp_string1);
@@ -377,7 +445,6 @@ void conditional_handler(char *string1) {
     if (second_type != first_type) {
         printf("\n\e[34mprog\e[0m:%d incompatible comparison: '\e[31m%s, %s\e[0m'\nnote: conditional doesn't return boolean\n\n", current_line, temp_string, temp_string1);
     }    
-
 
 
 }
@@ -425,6 +492,8 @@ void array_set_handler(char *string1) {     //doesn't check out of bounds, just 
         
         int start = i;
         int array_flag = 0;
+        int function_flag = 0;
+        int count_spaces = 0;
         
         for (i = start; i < strlen(string1); i++) {
             if (string1[i] == ' ' || i == strlen(string1) - 1) {
@@ -438,10 +507,38 @@ void array_set_handler(char *string1) {     //doesn't check out of bounds, just 
                             break;
                         }
                     }
+                } else if (string1[i + 1] == '(' && check_IDE(temp_string1)) {
+                    function_flag = 1;
+                    i++;
+                    for (; i < strlen(string1); i++) {
+                        if (string1[i] == ')') {
+                            i++;
+                            break;
+                        } else if (string1[i] == ' ') {
+                            count_spaces++;
+                        }
+                    }
+                } else if (string1[i + 1] == '(') {
+                    i++;
                 }
                 
+                if (function_flag) {
+                    char *real_string = makeString(start, i, string1);
+                    function_flag = 0;
+                    char *empty = "   ";
+                    char *new_string = malloc(strlen(real_string) + 4);
+                    strcpy(new_string, empty);
+                    strcat(new_string, real_string);
+                    
+                    if (count_spaces >= 2) {
+                        function_call_handler(new_string, 1, 0);
+                    } else {
+                        function_call_handler(new_string, 0, 0);
+                    } 
+                    count_spaces = 0;
+                
                     //special checks for array
-                if (array_flag) {
+                } else if (array_flag) {
                     array_flag = 0;
                     Node_array *temp_array = get_array_node(temp_string1);
                     if (temp_array == NULL || temp_array->location != function_identity) {
@@ -467,6 +564,8 @@ void array_set_handler(char *string1) {     //doesn't check out of bounds, just 
 }
 
 void function_call_handler(char *string1, int param, int void_call) {         //checks if the function is void + if exists etc.
+
+    //printf("String received was %s, param = %d\n", string1, param);
 
     int i = 3;
     for (; i < strlen(string1); i++) {
@@ -535,9 +634,6 @@ void function_call_handler(char *string1, int param, int void_call) {         //
                                         
                     char *temp_string1 = makeString(start, i, string1);
                     
-                    //printf("hey\n");
-                    //printf("string is %s\n", temp_string1);
-                    //special check for array 
                     if (string1[i + 1] == '[') {
                         for (; i < strlen(string1); i++) {
                             if (string1[i] == ']') {
@@ -725,16 +821,17 @@ void variable_set_handler(char *string1) {      //for array set, variable sets (
                     char *temp_string1 = makeString(start, i, string1);
                     
                     //for arrays
-                    if (string1[i + 1] == '[') {
+                    if (string1[i + 1] == '[' && check_IDE(temp_string1)) {
                         for (; i < strlen(string1); i++) {
                             if (string1[i] == ']') {
                                 i++;
                                 array_flag = 1;
                                 break;
                             }
-                        }
-                    } else if (string1[i + 1] == '(') {
+                        }   //for functions
+                    } else if (string1[i + 1] == '(' && check_IDE(temp_string1)) {
                         function_flag = 1;
+                        i++;
                         for (; i < strlen(string1); i++) {
                             if (string1[i] == ')') {
                                 i++;
@@ -743,6 +840,8 @@ void variable_set_handler(char *string1) {      //for array set, variable sets (
                                 count_spaces++;
                             }
                         }
+                    } else if (string1[i + 1] == '(') {
+                        i++;
                     }
                 
                 if (function_flag) {
@@ -753,7 +852,7 @@ void variable_set_handler(char *string1) {      //for array set, variable sets (
                     strcpy(new_string, empty);
                     strcat(new_string, real_string);
                     
-                    if (count_spaces > 2) {
+                    if (count_spaces >= 2) {
                         function_call_handler(new_string, 1, 0);
                     } else {
                         function_call_handler(new_string, 0, 0);
@@ -1290,6 +1389,7 @@ Node_class *makeNode_class(char *string1) {
 
 Node_function *get_function_node(char *string1) {
 
+    if (head_function == NULL) return NULL;
     Node_function *temp = head_function;
     while (temp != NULL) {
         if (strcmp(temp->name, string1) == 0) {
@@ -1507,11 +1607,11 @@ void printList_all() {
         printf("\e[32m%s\e[0m\n", temp1->name);
     }
     
-    Node_function *temp2 = head_function;
     
     printf("Function list: \n");
     
-    if (temp2 != NULL) {    
+    if (head_function != NULL) {  
+        Node_function *temp2 = head_function;  
         while (temp2->next != NULL) {
             printf("\e[32m%s\e[0m(%d)(%d)->", temp2->name, temp2->type, temp2->has_parameters);
             temp2 = temp2->next;

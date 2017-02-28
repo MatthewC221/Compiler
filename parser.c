@@ -86,7 +86,7 @@ char *current_line;
 void pushLine() {
     
     
-    char *full_path = "parser_tests/all";
+    char *full_path = "parser_tests/legal-M";
     
     FILE *fp;
     printf("full path is %s\n", full_path);

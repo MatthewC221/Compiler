@@ -1,0 +1,40 @@
+class Program3 {
+  void main() {
+  int i
+  }
+} // missing closing brace
+
+class Program2 {
+  int i[];	// missing array size
+}
+
+class Program1 {
+    int i = 0;	// initializers not allowed
+}
+
+class Program4 {
+  int a[2+3];	// bad array decl
+}
+
+class Program6 {
+//  void main() {
+    int callout;	// callout is a reserved word
+//  }
+}
+
+class Program21 {
+//  void main() {
+    int b;
+    b = 2 + 7 = 12;	// bad expression
+//  }
+}
+
+class Program214 {
+  void foo() {
+    int a;
+    a = 0;
+  }
+//  void main() {
+    int;	// missing variable name
+//  }
+

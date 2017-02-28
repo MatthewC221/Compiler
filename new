@@ -1,0 +1,8 @@
+                    if (string1[i + 1] == '[') {
+                        for (; i < strlen(string1); i++) {
+                            if (string1[i] == ']') {
+                                array_flag = 1;
+                                break;
+                            }
+                        }
+                    }

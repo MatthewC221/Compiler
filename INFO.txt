@@ -1,0 +1,84 @@
+LOSE INFO
+ints to chars 
+longs to shorts
+
+WONT LOSE INFO
+ints to floats
+shorts to longs
+
+***COERCIONS GO UP HIERARCHY***
+int - float - double
+result = type of operand highest on hierarchy
+int + float = float
+int + double = double
+float + double = double
+
+TYPE CASTING?
+A - A + (int)B
+
+***CHECKS***
+1. When building parameter descriptor have
+    - name of type
+    - name of param
+Q: is name of type valid?
+    - look up name
+    - if not there look up name in \e[34mprog\e[0m symbol (could be class)
+    - else fails
+2. When building local descriptors have
+    - name of type
+    - name of param
+Q: is name of type valid?
+    - look up name
+    - if not there look up name in \e[34mprog\e[0m symbol (could be class)
+    - else fails
+3. When building local symbol table, have local descriptors
+Q: duplicate/shadowed (local declaration of parameter/global) variable names?
+    - check during insertion 
+4. When building class descriptor have  (LATER)
+    - name of class + superclass
+    - field symbol table
+    - method symbol table  
+Q: Check for:
+    - superclass name corresponds to class
+    - no name clashes between field names of sub and superclass
+    - overidden methods match param and return type decl
+
+LOAD INSTR
+Compiler looks up var name in local symbol table, parameter symbol table, field symbol table, if not found --> semantic error
+
+LOAD ARRAY INSTR
+Compiler has var name + index expr, look up var name (if not there, error), check type of expression (if not int, error)
+
+ADD OPERATIONS
+Compiler has 2 expressions
+Check for - right type + both integers
+Check types (produced expression for operations)
+
+STORE INSTR
+Compiler has var name + expr
+
+DO: Look up var name
+    - if in local symbol, reference local descriptor
+    - if in parameter symbol, error
+    - if in field symbol, reference field descriptor
+    - else error
+    - check type var against type expr
+    
+STORE ARRAY INSTR
+SAME AS ABOVE - check array index is int
+
+RETURN INSTR
+Check if return type matches func type (from func decl)
+
+CONDITIONAL INSTR
+If cond expression produces boolean
+
+*/
+
+//WE WILL NEED GLOBAL VAR LINKED LIST - type = int/char/bool/etc.
+
+/* THIS MANY LISTS
+Global vars
+Local vars - inc parameters
+Classes
+Functions

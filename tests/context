@@ -1,0 +1,208 @@
+class Program {
+  void main() {
+    int x;
+    boolean x;	// identifier declared twice
+  }								
+}
+class Program {
+  void main() {
+    a = 34;	// identifier used before being declared
+  }								
+}	
+// No main method
+class Program {
+  void foo() {
+  }
+  void bar() {
+  }
+}	
+class Program {
+  int a[0];	// bad array size
+  void main() {
+  }							
+}
+class Program {
+  int foo(int i, boolean b) {
+    return 4;
+  }
+
+  void main() {
+    int x;
+    x = foo(34, true, true);	// argument mismatch
+  }								
+}	
+class Program {
+  int foo(int i, boolean b) {
+    return 3;
+  }
+
+  void main() {
+    int x;
+    x = foo(34, 35);	// types don't match signature
+  }								
+}	
+class Program {
+  void foo(int i, boolean b) {
+    return 3;	// should not return value;
+  }
+  void main() {
+  }								
+}
+class Program {
+  int foo(int i, boolean b) {
+    return true;	// return value has wrong type
+  }
+  void main() {
+    int x;
+    x = foo(34, true);
+  }							
+}
+class Program {
+  int a[10];
+  boolean b;
+
+  void main() {
+    a[b] = 25;	// array index has wrong type
+  }								
+}
+class Program {
+  int a[10];
+
+  void main() {
+    a[1] = a;	// bad type, rhs should be an int
+  }								
+}
+class Program {
+  int a[10];
+
+  void main() {
+    if (a[3]) {}	// condition should be a boolean
+  }								
+}
+class Program {
+  void main() {
+    for x = false, 10 {   //initial condition must be an int
+    }
+  }							
+}
+class Program {
+  int a[10];
+  int i;
+
+  void main() {
+    a[3] = i < 35;	// rhs should be an int expression
+  }								
+}
+class Program {
+  boolean b;
+
+  void main() {
+    b = true > false;		// operands of > must be ints
+  }								
+}
+class Program {
+  boolean b;
+
+  void main() {
+    b = 5 == true;		// types of operands of == must be equal
+  }								
+}
+class Program {
+  boolean b;
+
+  void main() {
+    b = !5;	// operand of ! must be boolean
+  }								
+}
+class Program {
+  boolean b;
+
+  void main() {
+    b += true;	// lhs and rhs of += must be int
+  }								
+}
+// a quicksort program.  set the "length" parameter in main() to the
+// desired size of the sorted array.  if you want to sort an array
+// bigger than 100 elements, you'll also need to adjust the declaration
+// of the global array A.
+
+class Program
+{
+    int A[100];
+    int length;
+    
+    int partition(int p, int r) 
+    {
+	int x, i, j, t;
+        int z;
+        
+	x = A[p];
+	i = p - 1;
+	j = r + 1;
+
+  	for z = 0, length * length {
+	  j = j - 1;
+	    for a = 0, length {
+	      if (A[j] <= x) {
+		break;
+	      }
+	      j = j - 1;
+	    }
+
+	    for a = i + 1, length {
+	      if (A[a] >= x) {
+		i = a;
+		break;
+	      }
+	    }
+
+   	    if (i < j) {
+  		t = A[i];
+  		A[i] = A[j];
+  		A[j] = t;
+  	    } else {
+ 		return j;
+  	    }
+  	}
+	return -1;
+    }
+
+    void quicksort(int p, int r)
+    {
+  	int q;
+        
+  	if (p < r) {
+  	    q = partition (p, r);
+  	    quicksort (p, q);
+  	    quicksort (q+1, r);
+  	}
+    }
+    
+    void main() 
+    {
+	int temp;
+        
+	length = 10; // adjust for sort length
+        
+        callout("printf", "creating random array of %d elements\n", length);
+
+        callout("srandom", 17);
+        
+	for i = 0, length {
+            temp = callout("random");
+            A[i] = temp;
+        }
+        
+        callout("printf", "\nbefore sort:\n");
+	for i = 0, length {
+   	    callout ("printf", "%d\n", A[i]); 
+        }
+        
+        quicksort (0, length - 1);
+
+        callout("printf", "\nafter sort\n");
+	for i = 0, length {
+	  callout ("printf", "%d\n", A[i]); 
+  	}
+    }
+}

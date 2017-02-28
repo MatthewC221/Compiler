@@ -8,8 +8,8 @@ FUNCTIONS
 6=ELSE                      !
 7=CONDITIONAL_STATEMENT:special     !
 8=VARIABLE INITIALISED      !
-9=VARIABLE VALUE SET        !       function calls
-A=ARRAY REFERENCE SET       !     function calls
+9=VARIABLE VALUE SET        !       
+A=ARRAY REFERENCE SET       !    
 B=ARRAY INITIALISATION      !
 C=Callout(PARAM)            //not right now
 D=Callout()                 //not right now

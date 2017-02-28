@@ -1,0 +1,12 @@
+unsigned int find_type_func(char *string1) {
+
+    Node_function *temp = head_function;
+    while (temp != NULL) {
+        if (strcmp(temp->name, string1) == 0) {
+            return temp->type;
+        }
+        temp = temp->next;
+    }    
+
+    return -1;
+}
