@@ -41,6 +41,7 @@ int type = 0;
 
 #define PARSE 1
 #define SCAN 2
+#define SEMANTIC 3
 
 int main(int argc, char *argv[]) {
 
@@ -53,6 +54,8 @@ int main(int argc, char *argv[]) {
         status = SCAN;
     } else if ((strcmp(argv[1], "parse")) == 0) {
         status = PARSE;
+    } else if ((strcmp(argv[1], "semantic")) == 0) {
+        status = SEMANTIC;
     } else {
         fprintf(stderr, "Invalid input\n");
         return EXIT_FAILURE;
@@ -66,9 +69,9 @@ int main(int argc, char *argv[]) {
     strcat(full_path, argv[2]);
     
 
-    if (atoi(argv[2]) == -1) {
+    if (status == SEMANTIC || status == PARSE) {
         free(full_path);
-        pushLine();
+        pushLine(argv[2]);
     } else {
        
         fp = fopen(full_path, "r");

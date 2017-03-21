@@ -39,7 +39,7 @@ Node_local_variable *head_local_variable = NULL;
 Node_class *head_class = NULL;
 Node_array *head_array = NULL;
 
-unsigned int current_line;
+unsigned int current_line = 0;
 
 void semantic_handler() {
 

@@ -39,3 +39,10 @@ Semantic analyser - analyses the context of everything, void return in an intege
 
 Code generator - in the works...
 
+
+RUNNING SCANNER/PARSER/SEMANTIC
+
+chmod 755 semantic_test.pl
+./semantic_test.pl 
+
+(with the test dir in this dir)

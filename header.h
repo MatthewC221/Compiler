@@ -50,7 +50,7 @@ void push(char *string1, char *string2, int end);
 char *pop(void);
 void display(void);
 void display_current(void);
-void pushLine();
+void pushLine(char *file);
 void identifier_reduce();
 void check_function(); //checks if the line is valid
 void check_statement();
@@ -68,6 +68,7 @@ unsigned int if_operand(char *string1);
 unsigned int check_loop();
 void check_string(char *string1);
 
+void copy(char *buf);
 char get_next();
 
 //semantic structs

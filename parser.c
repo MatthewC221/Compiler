@@ -75,7 +75,7 @@ unsigned int else_statement = 0;
 unsigned int function_bracket = 0;
 unsigned int in_function = 0;
 
-char *current_line;
+char line_temp[256];
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -83,28 +83,27 @@ char *current_line;
 #include "header.h"   
 
     
-void pushLine() {
+void pushLine(char *file) {
     
-    
-    char *full_path = "parser_tests/legal-M";
-    
-    FILE *fp;
+    char *temp_path = "parser_tests/";
+    char *full_path = malloc(strlen(temp_path) + strlen(file) + 1);
+    strcpy(full_path, temp_path);
+    strcat(full_path, file);
     printf("full path is %s\n", full_path);
+    FILE *fp;
     fp = fopen(full_path, "r");
     if (fp == NULL) {
         fprintf(stderr, "File is invalid\n");
         fclose(fp);
         return;
     }
-    
     char buf[255];
 
     printf("Opening file %s\n", full_path);
     
     int number = 1;
     while (fgets(buf, 255, fp)) {
-        current_line = malloc(sizeof(char) * strlen(buf) + 1);
-        strcpy(current_line, buf);
+        copy(buf);
         checkLine_parse(buf, number++);
         line++;
     }
@@ -987,16 +986,22 @@ void check_integer() {
 char get_next() {
 
     int temp = column + 1;
-    for (; temp < strlen(current_line); temp++) {
-        if (current_line[temp] != ' ') {
+    for (; temp < strlen(line_temp); temp++) {
+        if (line_temp[temp] != ' ') {
             //printf("line number %d, col %d, returning %c\n", line, column, current_line[temp]);
-            return current_line[temp];
+            return line_temp[temp];
         }
     }
     
     return '!';
 }
+void copy(char *buf) {
 
+    for (int i = 0; i < strlen(buf); i++) {
+        line_temp[i] = buf[i];
+    }
+
+}
 
 
 
