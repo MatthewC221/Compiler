@@ -148,7 +148,7 @@ void printList_all();
 //void printList_function();
 //void printList_class();
 
-void semantic_handler();        //main handler function that reads from stack
+bool semantic_handler();        //main handler function that reads from stack
 
 void class_handler(char *string1);      //handles class
 void function_handler(char *string1);       //handles func w/o param

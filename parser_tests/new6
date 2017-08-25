@@ -1,0 +1,12 @@
+class Program {
+	void func() {
+		int a;
+		a = 7;
+	}
+	int main() {
+	    int b;
+		b = func();
+	}
+}
+
+//If a method call is used as an expression, the method must return a result.

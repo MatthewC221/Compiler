@@ -1,0 +1,18 @@
+     1                                  global main
+     2                                  extern printf
+     3                                  
+     4                                  
+     5                                  main:
+     6 00000000 25660A00                    string db `%f\n`, 0
+     7 00000004 9A9999999999F93F            rs dq 1.6
+     8 0000000C 4883EC08                    sub rsp, 8
+     9 00000010 F30F7E0425-                 movq xmm0, qword [rs]
+     9 00000015 [04000000]         
+    10 00000019 48BF-                       mov rdi, string
+    10 0000001B [0000000000000000] 
+    11 00000023 B801000000                  mov rax, 1
+    12 00000028 E8(00000000)                call printf
+    13 0000002D 4883C408                    add rsp, 8
+    14 00000031 B860000000                  mov eax, 0x60
+    15 00000036 31FF                        xor edi, edi
+    16 00000038 0F05                        syscall

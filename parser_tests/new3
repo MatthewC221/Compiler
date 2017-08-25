@@ -1,0 +1,9 @@
+class Program {
+	int main() {	
+	}
+	int func () {
+		return 1;
+	}
+}
+
+// The program contains a definition for a method called main that has no parameters (note that since execution starts at method main, any methods defined after main will never be executed)

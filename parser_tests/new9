@@ -1,0 +1,14 @@
+
+class Program {
+	int a;
+	int b;
+	int main() {
+		int a;
+		int b;
+		c = 12;
+		d = false;
+	}
+
+}
+
+//An id. used as a location must name a declared local/global variable or formal parameter

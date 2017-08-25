@@ -89,7 +89,7 @@ void pushLine(char *file) {
     char *full_path = malloc(strlen(temp_path) + strlen(file) + 1);
     strcpy(full_path, temp_path);
     strcat(full_path, file);
-    printf("full path is %s\n", full_path);
+    // printf("full path is %s\n", full_path);
     FILE *fp;
     fp = fopen(full_path, "r");
     if (fp == NULL) {
@@ -99,7 +99,7 @@ void pushLine(char *file) {
     }
     char buf[255];
 
-    printf("Opening file %s\n", full_path);
+    // printf("Opening file %s\n", full_path);
     
     int number = 1;
     while (fgets(buf, 255, fp)) {
@@ -120,7 +120,12 @@ void pushLine(char *file) {
     }
     
     //display();
-    semantic_handler();
+    if (semantic_handler()) {
+        fprintf(stderr, "Error doing compilation\n");
+    } else {
+        printf("Proceeding to code generator\n");
+        printf("%s\n", complete.stk[0]);
+    }
     
     fclose(fp);
     
@@ -569,7 +574,7 @@ void identifier_reduce(char *string) {
 
     char *former_string = pop();
     if (get_next() == '(' && if_operand(former_string)) {            //not an identifier, is a function
-        printf("AVOIDED\n");
+        // printf("AVOIDED\n");
         pure_push(former_string);
         pure_push("IDENTIFIER");
         //check_bracket_stack();

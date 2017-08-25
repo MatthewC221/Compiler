@@ -1,0 +1,37 @@
+     1                                  section     .text
+     2                                  global      _start                              ;must be declared for linker (ld)                            
+     3                                  extern printf
+     4                                  
+     5                                  _syscall:
+     6 00000000 CD80                        int 0x80
+     7 00000002 C3                          ret
+     8                                  
+     9                                  _start:                                         ;tell linker entry point
+    10                                  
+    11 00000003 BA1E000000                  mov     edx,len                             ;message length
+    12 00000008 B9[00000000]                mov     ecx,msg                             ;message to write
+    13 0000000D BB01000000                  mov     ebx,1                               ;file descriptor (stdout)
+    14 00000012 B804000000                  mov     eax,4                               ;system call number (sys_write)
+    15 00000017 CD80                        int     0x80                                ;call kernel
+    16                                  
+    17 00000019 B801000000                  mov     eax,1                               ;system call number (sys_exit)
+    18 0000001E E8DDFFFFFF                  call    _syscall                                ;call kernel
+    19                                      
+    20 00000023 BA1E000000                  mov edx, len2
+    21 00000028 B9[0E000000]                mov ecx, msg2
+    22 0000002D BB01000000                  mov ebx, 1
+    23 00000032 B804000000                  mov eax, 4
+    24 00000037 E8C4FFFFFF                  call _syscall
+    25                                      
+    26 0000003C B8EFBEADDE                  mov eax, 0xDEADBEEF
+    27 00000041 E8(00000000)                call printf
+    28                                      
+    29                                  
+    30                                  section     .data
+    31                                  
+    32 00000000 48656C6C6F2C20776F-     msg     db  'Hello, world!',0xa                 ;our dear string
+    32 00000009 726C64210A         
+    33 0000000E 476F6F646279652C20-     msg2    db  'Goodbye, world!', 0xa
+    33 00000017 776F726C64210A     
+    34                                  len     equ $ - msg                             ;length of our dear string
+    35                                  len2     equ $ - msg  

@@ -1,0 +1,2 @@
+nasm -f elf32 X.asm
+gcc -m32 X.o -o X

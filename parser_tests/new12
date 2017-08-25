@@ -1,0 +1,21 @@
+class Program {
+	void func() {
+	}
+
+	boolean func1() {
+	}
+
+	void main() {
+		boolean b;
+		int a;
+		a = b + 6;
+		a = b;
+		a = 7 * b;
+		a = c;
+		a = func() + 6;
+		a = func1() + 2;
+	}
+
+}
+
+//The operands of arith ops and rel ops must have type int

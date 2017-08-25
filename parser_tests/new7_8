@@ -1,0 +1,30 @@
+class Program {
+	int func() {
+		return;
+	}
+	int func1() {
+		boolean b;
+		b = false;
+		return b;
+	}
+	int func2() {
+		int a;
+		return a;
+	}
+	void func3() {
+		return 2;
+	}
+	boolean func4() {
+		return 1;
+	}
+	boolean func5() {
+		return;
+	}
+	
+	int main() {
+	}
+}
+
+//A return statement must not have a return value unless it appears in the body of a method that is declared to return a value
+
+//The expression in a return statement must have the same type as the declared result type of the enclosing method definition.

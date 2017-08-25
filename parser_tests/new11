@@ -1,0 +1,26 @@
+class Program {
+
+	void func() {
+	}
+
+	int main() {
+		int a;
+		a = 10;
+		boolean b;
+		b = 0;
+		if (a == b) {
+		}
+		
+		if (f == 6) {
+		}
+
+		if () {
+		}
+
+		if (func() == 3) {
+		}		
+	}
+
+}
+
+//The expr in an if statement must have type boolean. 

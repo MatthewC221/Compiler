@@ -1,0 +1,19 @@
+class Program {
+	int main() {
+		for A = true, false {
+		}
+		for A = 0, true {
+		}
+		int a[10];
+		for A = a, 100 {
+		}
+
+		break;
+		continue;
+		for i = 0, 100 {
+			break;
+			continue;
+		}
+
+	}
+}

@@ -1,0 +1,14 @@
+class Program {
+
+	int main() {
+		boolean b;
+		int a[b];
+		int c[50];
+		int d[c];
+	}
+
+}
+
+//For all locations of the form id[expr]
+(a) id must be an array variable, and
+(b) the type of expr must be int

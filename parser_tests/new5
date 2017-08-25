@@ -1,0 +1,19 @@
+class Program {
+	
+	int func(int a, int b, int c) {
+		return a * b * c;
+	}
+	
+	void main() {
+		int a;
+		boolean b;
+		b = false;
+		a = func(1, 2);
+		a = func();
+		a = func(a, 2, 1);
+		a = func(1, 2, 3);
+		a = func(b, 2, 3);
+	}
+}
+
+//The number and types of arguments in a method call must be the same as the number and types of the formals, i.e., the signatures must be identical.

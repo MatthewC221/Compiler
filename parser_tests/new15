@@ -1,0 +1,14 @@
+class Program {
+	void func() {
+	}
+	int main() {
+		int a;
+		a = false;
+		boolean c;
+		c = 6;
+		int d;
+		d = func();
+	}
+}
+
+//The location and the expr in an assignment, location= expr, must have the same type

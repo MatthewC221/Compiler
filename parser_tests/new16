@@ -1,0 +1,15 @@
+class Program {
+	int main() {
+		boolean b;
+		b += 1;
+		b -= 1;
+		int a[10];
+		a += 1;
+		a -= 1;
+		int a;
+		a += 1;
+		a -= 1;
+	}
+}
+
+//Incrementing and decrementing +=, -= must be of type (int)

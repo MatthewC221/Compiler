@@ -1,0 +1,11 @@
+class Program {
+	int main() {
+		a = 5;
+		int a;
+		b = true;
+		boolean b;	
+
+	}
+}
+
+// No identifier is used before it is declared

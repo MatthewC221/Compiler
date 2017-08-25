@@ -1,0 +1,10 @@
+class Program {
+	int main () {
+	    int b;
+		b = -1;
+		int a[-10];
+		int c[b];
+	}
+}
+
+//The int literal in an array declaration must be greater than 0. 
