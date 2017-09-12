@@ -13,4 +13,4 @@ Code generator - in the works...
 *./semantic_test.pl* 
 
 ##### Example: ./scanner parse new1 (where new1 is in parser_tests/)
-![Alt text](/example.pg?raw=true "Optional Title")
+![Alt text](/example.png?raw=true "Optional Title")
