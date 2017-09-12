@@ -788,8 +788,6 @@ void array_handler(char *string1) {
             printf("\n\e[34mprog\e[0m:%d array initialisation error: invalid array size: '\e[31m%s\e[0m'\nnote: valid array size is of 'positive integers'\n\n", current_line, temp_str); 
         }
     }
-                                     
-
 
     if (check_class(new_string)) {
     
@@ -1266,6 +1264,16 @@ unsigned int check_variable(char *string1) {    //checks if it exists, if does t
             return 1;
         }
         temp = temp->next;
+    }
+	
+	Node_local_variable *temp1 = head_local_variable; 
+    while (temp1 != NULL) {
+        if (strcmp(temp1->name, string1) == 0) {
+            printf("\n\e[34mprog\e[0m:%d class/function/variable/array initialisation error: redefinition of '\e[31m%s\e[0m'\nnote: previous definition of '\e[31m%s\e[0m' was here \e[34mprog\e[0m:%d\n\n", current_line, string1, string1, temp1->line_number);  
+            error_flag = true;
+            return 1;
+        }
+        temp1 = temp1->next;
     }
 
     return 0;
